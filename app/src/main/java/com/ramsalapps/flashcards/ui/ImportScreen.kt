@@ -1,5 +1,8 @@
 package com.ramsalapps.flashcards.ui
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -23,7 +26,26 @@ import androidx.compose.ui.unit.sp
 import com.ramsalapps.flashcards.ui.theme.*
 
 @Composable
-fun ImportScreen(onBack: () -> Unit) {
+fun ImportScreen(
+    onBack: () -> Unit,
+    recentImports: List<Pair<String, String>> = emptyList(),
+    onImportFinalized: (String, Uri) -> Unit = { _, _ -> }
+) {
+    var selectedFileUri by remember { mutableStateOf<Uri?>(null) }
+    var deckName by remember { mutableStateOf("") }
+    
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            selectedFileUri = it
+            // Sugerir nombre basado en el archivo si es posible
+            if (deckName.isEmpty()) {
+                deckName = it.lastPathSegment?.removeSuffix(".csv") ?: ""
+            }
+        }
+    }
+
     Scaffold(
         topBar = {
             Row(
@@ -49,15 +71,28 @@ fun ImportScreen(onBack: () -> Unit) {
         },
         bottomBar = {
             Button(
-                onClick = { },
+                onClick = { 
+                    selectedFileUri?.let { onImportFinalized(deckName, it) }
+                },
+                enabled = selectedFileUri != null && deckName.isNotBlank(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(24.dp)
                     .height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = AccentPink),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = AccentPink,
+                    disabledContainerColor = Color.LightGray
+                ),
                 shape = RoundedCornerShape(28.dp)
             ) {
-                Text("Finalize Import", color = TextDark, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Text(
+                    if (selectedFileUri != null && deckName.isNotBlank()) "Finalize Import" 
+                    else if (selectedFileUri == null) "Select a file first"
+                    else "Enter a name for your deck",
+                    color = if (selectedFileUri != null && deckName.isNotBlank()) TextDark else Color.Gray,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
+                )
             }
         }
     ) { padding ->
@@ -68,16 +103,44 @@ fun ImportScreen(onBack: () -> Unit) {
                 .padding(horizontal = 24.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            item { UploadZone() }
+            item { 
+                UploadZone(
+                    selectedFileName = selectedFileUri?.lastPathSegment,
+                    onBrowseClick = { launcher.launch("text/*") }
+                ) 
+            }
+
+            if (selectedFileUri != null) {
+                item {
+                    Column {
+                        Text("Deck Name", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = deckName,
+                            onValueChange = { deckName = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            placeholder = { Text("Example: Biology Exam") },
+                            shape = RoundedCornerShape(12.dp),
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color.White,
+                                unfocusedContainerColor = Color.White,
+                                focusedIndicatorColor = AccentBlue,
+                                unfocusedIndicatorColor = Color.LightGray
+                            )
+                        )
+                    }
+                }
+            }
+
             item { BionicReadingToggle() }
             item { FormattingGuide() }
-            item { RecentImportsSection() }
+            item { RecentImportsSection(recentImports) }
         }
     }
 }
 
 @Composable
-fun UploadZone() {
+fun UploadZone(selectedFileName: String?, onBrowseClick: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -94,24 +157,37 @@ fun UploadZone() {
                     .background(PastelBlue),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Default.ArrowForward, contentDescription = null, tint = AccentBlue)
+                Icon(
+                    if (selectedFileName != null) Icons.Default.Check else Icons.Default.ArrowForward,
+                    contentDescription = null,
+                    tint = if (selectedFileName != null) Color(0xFF4CAF50) else AccentBlue
+                )
             }
             Spacer(modifier = Modifier.height(16.dp))
-            Text("Upload CSV File", fontWeight = FontWeight.Bold, fontSize = 18.sp)
             Text(
-                "Tap to browse or drag and drop your\nflashcards file here",
+                if (selectedFileName != null) "File Selected!" else "Upload CSV File",
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp
+            )
+            Text(
+                selectedFileName ?: "Tap to browse your flashcards file",
                 textAlign = TextAlign.Center,
                 color = TextGray,
-                fontSize = 14.sp
+                fontSize = 14.sp,
+                modifier = Modifier.padding(horizontal = 16.dp)
             )
             Spacer(modifier = Modifier.height(16.dp))
             Button(
-                onClick = { },
+                onClick = onBrowseClick,
                 colors = ButtonDefaults.buttonColors(containerColor = AccentPink),
                 shape = RoundedCornerShape(20.dp),
                 contentPadding = PaddingValues(horizontal = 24.dp)
             ) {
-                Text("Browse Files", color = TextDark, fontWeight = FontWeight.Bold)
+                Text(
+                    if (selectedFileName != null) "Change File" else "Browse Files",
+                    color = TextDark,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     }
@@ -177,7 +253,7 @@ fun FormattingGuide() {
                 Column(modifier = Modifier.weight(1f)) {
                     Text("NotebookLM CSV Format", fontWeight = FontWeight.Bold)
                     Text(
-                        "Formato: Pregunta, Respuesta\nEjemplo: ¿Qué ciencia estudia...?, La informática...",
+                        "Formato: Pregunta, Respuesta",
                         fontSize = 12.sp,
                         color = TextGray
                     )
@@ -203,7 +279,9 @@ fun FormattingGuide() {
 }
 
 @Composable
-fun RecentImportsSection() {
+fun RecentImportsSection(recentFiles: List<Pair<String, String>>) {
+    if (recentFiles.isEmpty()) return
+
     Column {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -214,11 +292,6 @@ fun RecentImportsSection() {
             Text("Clear All", color = AccentBlue, fontSize = 14.sp, fontWeight = FontWeight.Bold)
         }
         Spacer(modifier = Modifier.height(12.dp))
-        val recentFiles = listOf(
-            "Informatica_Basica.csv" to "Oct 24 • 124 cards",
-            "Spanish_Vocab_V2.csv" to "Oct 21 • 50 cards",
-            "Chemistry_Formulas.csv" to "Oct 15 • 88 cards"
-        )
         recentFiles.forEach { (name, info) ->
             RecentFileItem(name, info)
             Spacer(modifier = Modifier.height(8.dp))
@@ -260,6 +333,12 @@ fun RecentFileItem(name: String, info: String) {
 @Composable
 fun ImportPreview() {
     FlashCardsTheme {
-        ImportScreen(onBack = {})
+        ImportScreen(
+            onBack = {},
+            recentImports = listOf(
+                "Informatica_Basica.csv" to "Oct 24 • 124 cards",
+                "Spanish_Vocab_V2.csv" to "Oct 21 • 50 cards"
+            )
+        )
     }
 }

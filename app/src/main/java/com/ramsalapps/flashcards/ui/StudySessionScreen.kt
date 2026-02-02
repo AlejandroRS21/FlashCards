@@ -1,5 +1,7 @@
 package com.ramsalapps.flashcards.ui
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -14,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -22,9 +25,19 @@ import androidx.compose.ui.unit.sp
 import com.ramsalapps.flashcards.ui.theme.*
 
 @Composable
-fun StudySessionScreen(onClose: () -> Unit) {
+fun StudySessionScreen(
+    onClose: () -> Unit,
+    question: String = "",
+    answer: String = "",
+    currentCardIndex: Int = 0,
+    totalCards: Int = 1
+) {
     var isFlipped by remember { mutableStateOf(false) }
-    var currentCardIndex by remember { mutableIntStateOf(0) }
+    val rotation by animateFloatAsState(
+        targetValue = if (isFlipped) 180f else 0f,
+        animationSpec = tween(durationMillis = 500),
+        label = "cardFlip"
+    )
 
     val cardBackgroundColors = listOf(
         Color.White,
@@ -35,7 +48,6 @@ fun StudySessionScreen(onClose: () -> Unit) {
         PastelPurple
     )
     
-    // Cambia de color cada 3 tarjetas
     val currentCardColor = cardBackgroundColors[(currentCardIndex / 3) % cardBackgroundColors.size]
 
     Column(
@@ -68,11 +80,11 @@ fun StudySessionScreen(onClose: () -> Unit) {
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text("Session Progress", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-            Text("${currentCardIndex + 1} / 50 cards", color = TextGray, fontSize = 14.sp)
+            Text("${currentCardIndex + 1} / $totalCards cards", color = TextGray, fontSize = 14.sp)
         }
         Spacer(modifier = Modifier.height(8.dp))
         LinearProgressIndicator(
-            progress = (currentCardIndex + 1) / 50f,
+            progress = if (totalCards > 0) (currentCardIndex + 1).toFloat() / totalCards else 0f,
             modifier = Modifier.fillMaxWidth().height(8.dp).clip(CircleShape),
             color = AccentBlue,
             trackColor = Color.White.copy(alpha = 0.5f)
@@ -80,11 +92,15 @@ fun StudySessionScreen(onClose: () -> Unit) {
 
         Spacer(modifier = Modifier.height(40.dp))
 
-        // Flashcard (Text-only with dynamic background)
+        // Flashcard with Flip Animation
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
+                .graphicsLayer {
+                    rotationY = rotation
+                    cameraDistance = 12f * density
+                }
                 .clickable { isFlipped = !isFlipped },
             shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(containerColor = currentCardColor),
@@ -93,13 +109,19 @@ fun StudySessionScreen(onClose: () -> Unit) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
+                    .graphicsLayer {
+                        // Evita que el texto se vea al revés cuando la tarjeta está girada
+                        if (rotation > 90f) {
+                            rotationY = 180f
+                        }
+                    }
                     .padding(32.dp),
                 contentAlignment = Alignment.Center
             ) {
-                if (!isFlipped) {
+                if (rotation <= 90f) {
                     // Front: Question
                     BionicText(
-                        text = "¿Qué ciencia estudia el tratamiento automático de la información?",
+                        text = question,
                         fontSize = 28.sp,
                         color = TextDark,
                         modifier = Modifier.fillMaxWidth()
@@ -107,9 +129,9 @@ fun StudySessionScreen(onClose: () -> Unit) {
                 } else {
                     // Back: Answer
                     Text(
-                        text = "La informática, que procede de la fusión de las palabras información y automática.",
+                        text = answer,
                         fontSize = 22.sp,
-                        color = TextDark, // Usamos TextDark para mejor legibilidad en fondos pastel
+                        color = TextDark,
                         textAlign = TextAlign.Center,
                         lineHeight = 32.sp
                     )
@@ -124,45 +146,7 @@ fun StudySessionScreen(onClose: () -> Unit) {
             textAlign = TextAlign.Center,
             color = TextGray
         )
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Feedback Buttons (Only visible on back side)
-        if (isFlipped) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(Color.White)
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                val onNext = {
-                    currentCardIndex++
-                    isFlipped = false
-                }
-                FeedbackButton("Again", "< 1m", PastelPink, modifier = Modifier.weight(1f).clickable { onNext() })
-                FeedbackButton("Hard", "2d", PastelYellow, modifier = Modifier.weight(1f).clickable { onNext() })
-                FeedbackButton("Good", "4d", PastelGreen, modifier = Modifier.weight(1f).clickable { onNext() })
-                FeedbackButton("Easy", "7d", PastelBlue, modifier = Modifier.weight(1f).clickable { onNext() })
-            }
-        } else {
-            // Placeholder to maintain layout
-            Box(modifier = Modifier.height(80.dp).fillMaxWidth())
-        }
-    }
-}
-
-@Composable
-fun FeedbackButton(label: String, time: String, bgColor: Color, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
-            .background(bgColor)
-            .padding(vertical = 12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(label, fontWeight = FontWeight.Bold, color = TextDark)
-        Text(time, fontSize = 12.sp, color = TextGray)
+        Spacer(modifier = Modifier.height(40.dp))
     }
 }
 
@@ -170,6 +154,12 @@ fun FeedbackButton(label: String, time: String, bgColor: Color, modifier: Modifi
 @Composable
 fun StudySessionPreview() {
     FlashCardsTheme {
-        StudySessionScreen(onClose = {})
+        StudySessionScreen(
+            onClose = {},
+            question = "¿Qué ciencia estudia el tratamiento automático de la información?",
+            answer = "La informática, que procede de la fusión de las palabras información y automática.",
+            currentCardIndex = 0,
+            totalCards = 50
+        )
     }
 }
