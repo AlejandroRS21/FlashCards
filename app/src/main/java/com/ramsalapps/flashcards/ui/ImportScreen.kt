@@ -46,30 +46,32 @@ fun ImportScreen(onBack: () -> Unit) {
         uri?.let {
             try {
                 val inputStream = context.contentResolver.openInputStream(it)
-                val reader = BufferedReader(InputStreamReader(inputStream))
-                val flashcards = mutableListOf<Flashcard>()
-                
-                reader.useLines { lines ->
-                    lines.forEach { line ->
-                        if (line.isNotBlank()) {
-                            val parts = line.split(",", limit = 2)
-                            if (parts.size == 2) {
-                                val question = parts[0].trim()
-                                val answer = parts[1].trim()
-                                if (question.isNotEmpty() && answer.isNotEmpty()) {
-                                    flashcards.add(Flashcard(question, answer, "Imported"))
+                inputStream?.use { stream ->
+                    val reader = BufferedReader(InputStreamReader(stream))
+                    val flashcards = mutableListOf<Flashcard>()
+                    
+                    reader.useLines { lines ->
+                        lines.forEach { line ->
+                            if (line.isNotBlank()) {
+                                val parts = line.split(",", limit = 2)
+                                if (parts.size == 2) {
+                                    val question = parts[0].trim()
+                                    val answer = parts[1].trim()
+                                    if (question.isNotEmpty() && answer.isNotEmpty()) {
+                                        flashcards.add(Flashcard(question, answer, ""))
+                                    }
                                 }
                             }
                         }
                     }
-                }
-                
-                if (flashcards.isEmpty()) {
-                    errorMessage = "No valid flashcards found in the CSV file. Expected format: Question, Answer"
-                    showErrorDialog = true
-                } else {
-                    importedFlashcards = flashcards
-                    selectedFileName = it.lastPathSegment ?: "flashcards.csv"
+                    
+                    if (flashcards.isEmpty()) {
+                        errorMessage = "No valid flashcards found in the CSV file. Expected format: Question, Answer"
+                        showErrorDialog = true
+                    } else {
+                        importedFlashcards = flashcards
+                        selectedFileName = it.lastPathSegment ?: "flashcards.csv"
+                    }
                 }
             } catch (e: Exception) {
                 errorMessage = "Error reading file: ${e.message}"
@@ -82,9 +84,15 @@ fun ImportScreen(onBack: () -> Unit) {
         DeckNameDialog(
             onDismiss = { showNameDialog = false },
             onConfirm = { deckName ->
-                FlashcardRepository.addDeck(deckName, importedFlashcards)
-                showNameDialog = false
-                onBack()
+                val success = FlashcardRepository.addDeck(deckName, importedFlashcards)
+                if (success) {
+                    showNameDialog = false
+                    onBack()
+                } else {
+                    errorMessage = "A deck with the name '$deckName' already exists. Please choose a different name."
+                    showErrorDialog = true
+                    showNameDialog = false
+                }
             },
             cardCount = importedFlashcards.size
         )
@@ -153,7 +161,7 @@ fun ImportScreen(onBack: () -> Unit) {
         ) {
             item { 
                 UploadZone(
-                    onBrowseClick = { filePickerLauncher.launch("text/*") },
+                    onBrowseClick = { filePickerLauncher.launch("text/csv") },
                     selectedFileName = selectedFileName,
                     cardCount = importedFlashcards.size
                 ) 

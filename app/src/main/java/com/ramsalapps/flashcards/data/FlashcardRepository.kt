@@ -18,7 +18,12 @@ object FlashcardRepository {
     private val _flashcards = MutableStateFlow<Map<String, List<Flashcard>>>(emptyMap())
     val flashcards: StateFlow<Map<String, List<Flashcard>>> = _flashcards.asStateFlow()
     
-    fun addDeck(name: String, flashcards: List<Flashcard>, icon: String = "📚") {
+    fun addDeck(name: String, flashcards: List<Flashcard>, icon: String = "📚"): Boolean {
+        // Check if deck with this name already exists
+        if (_decks.value.any { it.name.equals(name, ignoreCase = true) }) {
+            return false // Deck name already exists
+        }
+        
         val newDeck = Deck(
             name = name,
             cardCount = flashcards.size,
@@ -27,6 +32,7 @@ object FlashcardRepository {
         )
         _decks.value = _decks.value + newDeck
         _flashcards.value = _flashcards.value + (name to flashcards)
+        return true
     }
     
     fun getFlashcardsForDeck(deckName: String): List<Flashcard> {
