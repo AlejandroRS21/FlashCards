@@ -12,6 +12,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ramsalapps.flashcards.Deck
 import com.ramsalapps.flashcards.Session
+import com.ramsalapps.flashcards.data.FlashcardRepository
 import com.ramsalapps.flashcards.ui.theme.*
 
 @Composable
@@ -29,6 +32,8 @@ fun DashboardScreen(
     onStartReview: () -> Unit,
     onImportClick: () -> Unit
 ) {
+    val decks by FlashcardRepository.decks.collectAsState()
+    
     Scaffold(
         bottomBar = { BottomNavigationBar(onLibraryClick = onImportClick) }
     ) { padding ->
@@ -47,10 +52,7 @@ fun DashboardScreen(
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                     contentPadding = PaddingValues(vertical = 8.dp)
                 ) {
-                    items(listOf(
-                        Deck("Medical Terms", 120, 80, "🩺"),
-                        Deck("Spanish 101", 45, 30, "💃")
-                    )) { deck ->
+                    items(decks) { deck ->
                         DeckCard(deck)
                     }
                 }
