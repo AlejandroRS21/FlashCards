@@ -1,0 +1,499 @@
+BUILD AND DEPLOYMENT GUIDE - FlashCards v1.3
+==============================================
+
+ENVIRONMENT SETUP
+=================
+
+Prerequisites:
+
+1. Android Studio (Latest version 2024.1 or later)
+   - Download from: developer.android.com/studio
+   - Installation guide: Follow Android Studio setup wizard
+
+2. Android SDK
+   - Minimum SDK: API 33 (Android 13)
+   - Target SDK: API 34 (Android 14)
+   - Ensure SDK installed via SDK Manager
+
+3. Gradle
+   - Version: 9.1 (automatic with Android Studio)
+   - Located in: gradle/wrapper/gradle-wrapper.jar
+
+4. Java Development Kit
+   - Version: Java 11 or later
+   - Set JAVA_HOME environment variable
+   - Verify: java -version in terminal
+
+5. Kotlin
+   - Version: 2.2.0 (automatic with Gradle)
+   - Plugin installed via build.gradle
+
+WORKSPACE SETUP
+===============
+
+1. Project Directory Structure:
+   FlashCards/
+   ├── app/
+   │   ├── src/
+   │   │   ├── main/
+   │   │   │   ├── java/
+   │   │   │   │   └── com/ramsalapps/flashcards/
+   │   │   │   └── AndroidManifest.xml
+   │   │   ├── test/
+   │   │   └── androidTest/
+   │   ├── build.gradle.kts
+   │   └── proguard-rules.pro
+   ├── gradle/
+   │   └── wrapper/
+   ├── build.gradle.kts
+   ├── settings.gradle.kts
+   └── local.properties
+
+2. Create local.properties File:
+   Location: ProjectRoot/local.properties
+   Content:
+   sdk.dir=/path/to/android/sdk
+
+   Example (Windows):
+   sdk.dir=C:\\Users\\YourUsername\\AppData\\Local\\Android\\Sdk
+
+   Example (Mac):
+   sdk.dir=/Users/YourUsername/Library/Android/sdk
+
+   Example (Linux):
+   sdk.dir=/home/username/Android/Sdk
+
+DEVELOPMENT BUILD
+=================
+
+Build Debug APK:
+
+1. Using Android Studio:
+   a. File > Open > Navigate to project
+   b. Click "Open" to load project
+   c. Wait for Gradle sync (first build 5-10 minutes)
+   d. Build > Build Bundle(s)/APK(s) > Build APK(s)
+   e. Locate APK: app/build/outputs/apk/debug/app-debug.apk
+
+2. Using Command Line:
+   a. Open terminal in project root
+   b. Run: ./gradlew assembleDebug (Windows: gradlew.bat assembleDebug)
+   c. Wait for build completion
+   d. APK location: app/build/outputs/apk/debug/app-debug.apk
+
+Clean Build (if issues occur):
+   ./gradlew clean assembleDebug
+
+Build Output:
+   BUILD SUCCESSFUL in 8s
+   APK: app-debug.apk (approximately 20MB)
+
+RUNNING ON EMULATOR
+===================
+
+Setup Android Virtual Device (AVD):
+
+1. Open AVD Manager in Android Studio
+2. Create new virtual device:
+   a. Click "Create Virtual Device"
+   b. Select device type: Pixel 6 (recommended)
+   c. Select target API: 34 (Android 14)
+   d. Name device: FlashCards_Emulator
+   e. Finish and start device
+
+2. Run Application:
+   a. Connect device (physical or emulator)
+   b. Click green Run button in Android Studio
+   c. Select target device
+   d. Click OK to launch app
+
+   Or from command line:
+   ./gradlew installDebug
+   adb shell am start -n com.ramsalapps.flashcards/.MainActivity
+
+TESTING ON PHYSICAL DEVICE
+==========================
+
+Prerequisites:
+1. Android device with API 33 or higher
+2. USB cable for connection
+3. USB debugging enabled on device
+
+Enable USB Debugging:
+
+1. Settings > About > Build Number (tap 7 times)
+2. Settings > System > Developer Options
+3. Enable "USB Debugging"
+4. Connect device to computer via USB
+5. Authorize computer when prompted on device
+
+Install Debug APK:
+
+1. Copy app-debug.apk to device
+   Method 1: Direct installation
+   a. Email APK to device
+   b. Open email on device
+   c. Download and tap APK
+   d. Tap Install
+
+   Method 2: Via ADB
+   a. Connect device via USB
+   b. Open terminal in project
+   c. Run: adb install app/build/outputs/apk/debug/app-debug.apk
+   d. Wait for "Success" message
+
+2. Test Application:
+   a. Find FlashCards app icon on device
+   b. Tap to open
+   c. Test all features
+   d. Import test CSV file
+   e. Create deck
+   f. Study cards
+
+RELEASE BUILD
+=============
+
+Generate Release APK:
+
+1. Using Android Studio:
+   a. Build > Build Bundle(s)/APK(s) > Build APK(s)
+   b. Select "release" from configuration
+   c. Provide signing key information
+   d. Wait for build completion
+
+2. Using Command Line:
+   a. Run: ./gradlew assembleRelease
+   b. Provide keystore information when prompted
+   c. APK location: app/build/outputs/apk/release/app-release.apk
+
+Signing Key Setup:
+
+1. Create Signing Key (first time only):
+   a. Build > Generate Signed Bundle/APK
+   b. Select APK
+   c. Click Create New > Create Key Store
+   d. Provide information:
+      - Key store path: (choose location)
+      - Key store password: (create secure password)
+      - Key alias: flashcards_key
+      - Key password: (create secure password)
+      - Validity: 30 years minimum
+   e. Fill certificate information (name, organization, etc.)
+   f. Click OK
+
+2. Sign Release APK:
+   a. Build > Generate Signed Bundle/APK
+   b. Select APK
+   c. Select keystore created above
+   d. Enter passwords
+   e. Select release build type
+   f. Finish to generate signed APK
+
+Build Output:
+   Signed APK: app/build/outputs/apk/release/app-release.apk
+   Size: Approximately 15MB
+
+GRADLE CONFIGURATION
+====================
+
+Build Variants:
+
+Debug Build:
+- No optimization
+- Full debugging symbols
+- Faster build time
+- For development and testing
+- File: build.gradle.kts (debug configuration)
+
+Release Build:
+- Code optimization enabled
+- Debugging symbols removed
+- Smaller file size
+- For distribution
+- ProGuard rules applied
+- File: proguard-rules.pro
+
+Configuration Files:
+
+1. build.gradle.kts (Root)
+   - Gradle version
+   - Kotlin version
+   - Plugin versions
+   - Dependency versions
+
+2. app/build.gradle.kts
+   - App-specific configuration
+   - SDK versions
+   - Dependencies
+   - Build types
+   - Product flavors (if any)
+
+3. gradle.properties
+   - Gradle system properties
+   - VM options
+
+4. settings.gradle.kts
+   - Project structure
+   - Module definitions
+
+DEPENDENCY MANAGEMENT
+====================
+
+Current Dependencies:
+
+androidxComposeBom = "2024.01.00" or latest
+androidx.material3 = "1.1.2" or latest
+androidx.activity.compose = "1.8.1" or latest
+com.google.code.gson = "2.10.1" or latest
+kotlin = "2.2.0" or latest
+
+Update Dependencies:
+
+1. Check for updates:
+   a. Help > Check for Updates (Android Studio)
+   b. Or manually update gradle.properties
+
+2. Sync Gradle:
+   a. File > Sync Now
+   b. Or run: ./gradlew sync
+
+TROUBLESHOOTING BUILD ISSUES
+============================
+
+Issue: Gradle sync fails
+
+Solutions:
+1. File > Invalidate Caches > Invalidate and Restart
+2. Delete .gradle folder and sync again
+3. Update Android Studio to latest version
+4. Check internet connection (downloads dependencies)
+
+Issue: Build fails with compilation errors
+
+Solutions:
+1. Clean project: ./gradlew clean
+2. Check Java version: java -version (should be 11+)
+3. Verify SDK installation
+4. Check file encoding (UTF-8)
+5. Review error message for specific issue
+
+Issue: APK installation fails
+
+Solutions:
+1. Uninstall previous version: adb uninstall com.ramsalapps.flashcards
+2. Clear data: Settings > Apps > FlashCards > Clear Data
+3. Ensure sufficient storage on device
+4. Check Android version (13+)
+5. Verify APK not corrupted (check file size ~15-20MB)
+
+Issue: App crashes immediately after launch
+
+Solutions:
+1. Check logcat for error message
+2. Verify permissions in AndroidManifest.xml
+3. Ensure all dependencies resolved
+4. Check SharedPreferences initialization
+5. Review data loading logic
+
+TESTING PROCEDURES
+==================
+
+Automated Testing:
+
+Run all tests:
+./gradlew test
+
+Run instrumented tests:
+./gradlew connectedAndroidTest
+
+Manual Testing Checklist:
+
+1. Installation:
+   [ ] APK installs without errors
+   [ ] App launches successfully
+   [ ] All permissions granted
+   [ ] No crashes on startup
+
+2. Dashboard:
+   [ ] Header displays correctly
+   [ ] Statistics visible
+   [ ] Recent decks section appears
+   [ ] All decks section appears
+   [ ] Navigation bar visible
+
+3. Import:
+   [ ] Library button navigates to import
+   [ ] File browser opens
+   [ ] CSV file selectable
+   [ ] Deck name editable
+   [ ] Card preview displays
+   [ ] Deck creation successful
+
+4. Study:
+   [ ] Deck opens correctly
+   [ ] Cards display properly
+   [ ] Tap flips card
+   [ ] Swipe left goes to next
+   [ ] Swipe right goes to previous
+   [ ] Previous/Next buttons work
+   [ ] Progress bar updates
+
+5. Data:
+   [ ] Data persists after closing app
+   [ ] Deck list recovers on restart
+   [ ] Edit functionality saves changes
+   [ ] No data corruption
+
+PERFORMANCE OPTIMIZATION
+========================
+
+Build Optimization:
+
+1. Enable ProGuard (Release builds):
+   - Reduces APK size by ~25%
+   - Obfuscates code
+   - Improves performance
+   - Configuration: proguard-rules.pro
+
+2. Minimize dependencies:
+   - Use only required libraries
+   - Remove unused code
+   - Optimize imports
+
+3. Optimize resources:
+   - Remove unused strings
+   - Compress images
+   - Reduce asset file sizes
+
+Runtime Optimization:
+
+1. Memory management:
+   - Avoid memory leaks
+   - Close resources properly
+   - Use appropriate data structures
+
+2. UI performance:
+   - Lazy load lists
+   - Efficient animations
+   - Minimize recompositions
+
+DEPLOYMENT CHECKLIST
+====================
+
+Pre-Release:
+[ ] All features implemented and tested
+[ ] Code reviewed for quality
+[ ] Documentation complete
+[ ] Release build generated
+[ ] APK signed with release key
+[ ] APK tested on multiple devices
+[ ] No known bugs remaining
+[ ] Performance acceptable
+[ ] UI responsive and smooth
+
+Release:
+[ ] Version number updated
+[ ] Release notes prepared
+[ ] APK file ready for distribution
+[ ] Instructions documented
+[ ] Support team notified
+
+Post-Release:
+[ ] Monitor user feedback
+[ ] Track reported issues
+[ ] Plan hotfixes if needed
+[ ] Schedule next update
+[ ] Update documentation
+
+DISTRIBUTION OPTIONS
+====================
+
+1. Direct Distribution:
+   - Send APK via email
+   - Share via file hosting
+   - Direct download link
+   - USB transfer
+
+2. App Store Distribution:
+   - Google Play Store
+   - Alternative app stores
+   - Requires app store account
+   - Fee may apply
+
+3. Beta Testing:
+   - TestFlight (iOS equivalent)
+   - Google Play Beta testing
+   - Collect user feedback
+   - Iterate before release
+
+DOCUMENTATION FOR DISTRIBUTION
+==============================
+
+Include with Release:
+
+1. README.md or DOCUMENTATION.md
+   - Quick overview
+   - Installation instructions
+   - Basic usage guide
+
+2. CHANGELOG.txt
+   - Version history
+   - New features
+   - Bug fixes
+   - Known issues
+
+3. TERMS.txt
+   - License information
+   - Privacy policy
+   - Terms of use
+
+CONTINUOUS INTEGRATION
+======================
+
+Setup CI/CD (Optional):
+
+1. GitHub Actions (if using GitHub):
+   a. Create .github/workflows/build.yml
+   b. Configure build steps
+   c. Automated tests on push
+   d. Generate APK automatically
+
+2. Jenkins Setup:
+   a. Install Jenkins
+   b. Configure Android SDK
+   c. Create job for FlashCards
+   d. Enable automatic builds
+
+MAINTENANCE
+===========
+
+Regular Maintenance Tasks:
+
+1. Update dependencies:
+   - Monthly security updates
+   - Quarterly feature updates
+   - Test compatibility
+
+2. Monitor performance:
+   - Check build times
+   - Monitor app size
+   - Ensure fast startup
+
+3. User support:
+   - Track issues
+   - Plan fixes
+   - Document solutions
+
+CONCLUSION
+==========
+
+This guide provides complete build and deployment procedures for FlashCards v1.3.
+Follow the procedures outlined above for consistent, reliable builds.
+
+For technical questions, refer to:
+- TECHNICAL_SPECS.txt
+- DOCUMENTATION.txt
+- Source code comments
+
+Build Status: Production Ready
+Last Updated: February 2, 2026

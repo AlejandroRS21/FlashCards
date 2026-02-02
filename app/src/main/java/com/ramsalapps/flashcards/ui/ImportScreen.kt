@@ -1,18 +1,20 @@
 package com.ramsalapps.flashcards.ui
 
-import android.content.Context
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,6 +27,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.activity.compose.BackHandler
 import com.ramsalapps.flashcards.CSVParser
 import com.ramsalapps.flashcards.DataManager
 import com.ramsalapps.flashcards.DeckWithFlashcards
@@ -44,6 +47,11 @@ fun ImportScreen(
     onImportFinalized: (String, Uri) -> Unit = { _, _ -> },
     onDeckCreated: () -> Unit = {}
 ) {
+    // Manejar el botón atrás del móvil
+    BackHandler {
+        onBack()
+    }
+
     var selectedFileUri by remember { mutableStateOf<Uri?>(null) }
     var deckName by remember { mutableStateOf("") }
     var importStep by remember { mutableStateOf(ImportStep.SELECT_FILE) }
@@ -74,63 +82,72 @@ fun ImportScreen(
         }
     }
 
-    when (importStep) {
-        ImportStep.SELECT_FILE -> {
-            SelectFileStep(
-                selectedFileUri = selectedFileUri,
-                deckName = deckName,
-                errorMessage = errorMessage,
-                onDeckNameChange = { deckName = it },
-                onBrowseClick = { launcher.launch("text/*") },
-                onNextClick = {
-                    isLoading = true
-                    // Parsear CSV
-                    selectedFileUri?.let { uri ->
-                        csvParser.parseCSV(uri).onSuccess { flashcards ->
-                            parsedFlashcards = flashcards
-                            importStep = ImportStep.REVIEW_CARDS
-                            isLoading = false
-                        }.onFailure { error ->
-                            errorMessage = "Error al parsear el archivo: ${error.message}"
-                            isLoading = false
-                        }
-                    }
-                },
-                onBack = onBack,
-                recentImports = recentImports,
-                isLoading = isLoading
-            )
-        }
-        ImportStep.REVIEW_CARDS -> {
-            ReviewCardsStep(
-                deckName = deckName,
-                flashcards = parsedFlashcards,
-                onDeckNameChange = { deckName = it },
-                onCreateDeck = {
-                    isLoading = true
-                    // Guardar deck
-                    val deck = Deck(
-                        name = deckName,
-                        cardCount = parsedFlashcards.size,
-                        progress = 0,
-                        icon = "📚"
+    Scaffold(
+        bottomBar = {
+            if (importStep == ImportStep.SELECT_FILE) {
+                BottomNavigationBar(onLibraryClick = onBack)
+            }
+        },
+        contentWindowInsets = WindowInsets(0, 0, 0, 0)
+    ) { padding ->
+        Box(modifier = Modifier.padding(padding)) {
+            when (importStep) {
+                ImportStep.SELECT_FILE -> {
+                    SelectFileStep(
+                        selectedFileUri = selectedFileUri,
+                        deckName = deckName,
+                        errorMessage = errorMessage,
+                        onDeckNameChange = { deckName = it },
+                        onBrowseClick = { launcher.launch("text/*") },
+                        onNextClick = {
+                            isLoading = true
+                            selectedFileUri?.let { uri ->
+                                csvParser.parseCSV(uri).onSuccess { flashcards: List<Flashcard> ->
+                                    parsedFlashcards = flashcards
+                                    importStep = ImportStep.REVIEW_CARDS
+                                    isLoading = false
+                                }.onFailure { error: Throwable ->
+                                    errorMessage = "Error al parsear el archivo: ${error.message}"
+                                    isLoading = false
+                                }
+                            }
+                        },
+                        onBack = onBack,
+                        recentImports = recentImports,
+                        isLoading = isLoading
                     )
-                    val deckWithFlashcards = DeckWithFlashcards(deck, parsedFlashcards)
-                    dataManager.saveDeck(deckWithFlashcards)
-                    onImportFinalized(deckName, selectedFileUri ?: Uri.EMPTY)
-                    onDeckCreated()
-                    importStep = ImportStep.SELECT_FILE
-                    selectedFileUri = null
-                    deckName = ""
-                    parsedFlashcards = emptyList()
-                    isLoading = false
-                },
-                onBack = {
-                    importStep = ImportStep.SELECT_FILE
-                    errorMessage = ""
-                },
-                isLoading = isLoading
-            )
+                }
+                ImportStep.REVIEW_CARDS -> {
+                    ReviewCardsStep(
+                        deckName = deckName,
+                        flashcards = parsedFlashcards,
+                        onDeckNameChange = { deckName = it },
+                        onCreateDeck = {
+                            isLoading = true
+                            val deck = Deck(
+                                name = deckName,
+                                cardCount = parsedFlashcards.size,
+                                progress = 0,
+                                icon = "📚"
+                            )
+                            val deckWithFlashcards = DeckWithFlashcards(deck, parsedFlashcards)
+                            dataManager.saveDeck(deckWithFlashcards)
+                            onImportFinalized(deckName, selectedFileUri ?: Uri.EMPTY)
+                            onDeckCreated()
+                            importStep = ImportStep.SELECT_FILE
+                            selectedFileUri = null
+                            deckName = ""
+                            parsedFlashcards = emptyList()
+                            isLoading = false
+                        },
+                        onBack = {
+                            importStep = ImportStep.SELECT_FILE
+                            errorMessage = ""
+                        },
+                        isLoading = isLoading
+                    )
+                }
+            }
         }
     }
 }
@@ -152,31 +169,40 @@ fun SelectFileStep(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Icon(
-                    Icons.Default.KeyboardArrowLeft,
-                    contentDescription = "Back",
-                    modifier = Modifier.clickable { onBack() }
-                )
+                IconButton(
+                    onClick = { onBack() },
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                        contentDescription = "Back",
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
                 Text(
                     "Import Flashcards",
-                    modifier = Modifier.weight(1f),
                     textAlign = TextAlign.Center,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
+                    fontSize = 16.sp,
+                    modifier = Modifier.weight(1f)
                 )
-                Spacer(modifier = Modifier.width(24.dp))
+                Spacer(modifier = Modifier.width(40.dp))
             }
-        }
+        },
+        contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { padding ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+                .systemBarsPadding()
+                .padding(horizontal = 24.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp),
+            contentPadding = PaddingValues(bottom = 24.dp)
         ) {
             item {
                 UploadZone(
@@ -294,31 +320,40 @@ fun ReviewCardsStep(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Icon(
-                    Icons.Default.KeyboardArrowLeft,
-                    contentDescription = "Back",
-                    modifier = Modifier.clickable { onBack() }
-                )
+                IconButton(
+                    onClick = { onBack() },
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                        contentDescription = "Back",
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
                 Text(
                     "Review & Create",
-                    modifier = Modifier.weight(1f),
                     textAlign = TextAlign.Center,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
+                    fontSize = 16.sp,
+                    modifier = Modifier.weight(1f)
                 )
-                Spacer(modifier = Modifier.width(24.dp))
+                Spacer(modifier = Modifier.width(40.dp))
             }
-        }
+        },
+        contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { padding ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .systemBarsPadding()
+                .padding(horizontal = 24.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            contentPadding = PaddingValues(bottom = 24.dp)
         ) {
             item {
                 Column {
@@ -471,7 +506,7 @@ fun UploadZone(selectedFileName: String?, onBrowseClick: () -> Unit) {
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    if (selectedFileName != null) Icons.Default.Check else Icons.Default.ArrowForward,
+                    if (selectedFileName != null) Icons.Default.Check else Icons.AutoMirrored.Filled.ArrowForward,
                     contentDescription = null,
                     tint = if (selectedFileName != null) Color(0xFF4CAF50) else AccentBlue
                 )
@@ -630,14 +665,14 @@ fun RecentFileItem(name: String, info: String) {
                     .background(if (name.contains("Informatica")) PastelPink else if (name.contains("Spanish")) PastelYellow else PastelBlue),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Default.List, contentDescription = null, tint = TextDark, modifier = Modifier.size(20.dp))
+                Icon(Icons.AutoMirrored.Filled.List, contentDescription = null, tint = TextDark, modifier = Modifier.size(20.dp))
             }
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(name, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                 Text(info, fontSize = 12.sp, color = TextGray)
             }
-            Icon(Icons.Default.KeyboardArrowRight, contentDescription = null, tint = TextGray)
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = TextGray)
         }
     }
 }

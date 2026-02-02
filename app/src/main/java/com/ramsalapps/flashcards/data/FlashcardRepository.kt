@@ -9,8 +9,8 @@ import kotlinx.coroutines.flow.asStateFlow
 object FlashcardRepository {
     private val _decks = MutableStateFlow<List<Deck>>(
         listOf(
-            Deck("Medical Terms", 120, 80, "🩺"),
-            Deck("Spanish 101", 45, 30, "💃")
+            Deck(name = "Medical Terms", cardCount = 120, progress = 80, icon = "🩺"),
+            Deck(name = "Spanish 101", cardCount = 45, progress = 30, icon = "💃")
         )
     )
     val decks: StateFlow<List<Deck>> = _decks.asStateFlow()

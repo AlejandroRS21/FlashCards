@@ -10,11 +10,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,7 +29,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ramsalapps.flashcards.Deck
-import com.ramsalapps.flashcards.Flashcard
 import com.ramsalapps.flashcards.ui.theme.*
 import kotlinx.coroutines.launch
 import kotlin.math.abs
@@ -38,9 +37,6 @@ import kotlin.math.abs
 fun StudySessionScreen(
     onClose: () -> Unit,
     deck: Deck? = null,
-    question: String = "",
-    answer: String = "",
-    currentCardIndex: Int = 0,
     totalCards: Int = 1,
     onDeckUpdate: (Deck) -> Unit = {}
 ) {
@@ -53,8 +49,6 @@ fun StudySessionScreen(
     var editedDeckName by remember { mutableStateOf(deck?.name ?: "") }
 
     val currentCard = if (hasFlashcards && currentIndex < flashcards.size) flashcards[currentIndex] else null
-    val displayQuestion = currentCard?.question ?: question
-    val displayAnswer = currentCard?.answer ?: answer
     val displayTotal = if (hasFlashcards) flashcards.size else totalCards
 
     val offsetX = remember { Animatable(0f) }
@@ -74,7 +68,6 @@ fun StudySessionScreen(
         Color(0xFFFFE4B5)  // Moccasin
     )
 
-    val currentCardColor = cardBackgroundColors[(currentIndex / 3) % cardBackgroundColors.size]
 
     suspend fun animateSwipeNext() {
         // Swipe para siguiente: se desliza a la izquierda (offset negativo)
@@ -112,6 +105,7 @@ fun StudySessionScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(PastelPurple)
+            .systemBarsPadding()
             .padding(24.dp)
     ) {
         Row(
@@ -145,7 +139,7 @@ fun StudySessionScreen(
                         .clickable { showEditDialog = true }
                 )
             }
-            Icon(Icons.Default.List, contentDescription = "Stats", tint = TextDark)
+            Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Stats", tint = TextDark)
         }
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -159,7 +153,7 @@ fun StudySessionScreen(
         }
         Spacer(modifier = Modifier.height(8.dp))
         LinearProgressIndicator(
-            progress = if (displayTotal > 0) (currentIndex + 1).toFloat() / displayTotal else 0f,
+            progress = { if (displayTotal > 0) (currentIndex + 1).toFloat() / displayTotal else 0f },
             modifier = Modifier.fillMaxWidth().height(8.dp).clip(CircleShape),
             color = AccentBlue,
             trackColor = Color.White.copy(alpha = 0.5f)
@@ -320,7 +314,7 @@ fun StudySessionScreen(
                     ),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Previous")
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Previous")
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Previous")
                 }
@@ -339,7 +333,7 @@ fun StudySessionScreen(
                 ) {
                     Text("Next")
                     Spacer(modifier = Modifier.width(8.dp))
-                    Icon(Icons.Default.ArrowForward, contentDescription = "Next")
+                    Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Next")
                 }
             }
         }
@@ -386,9 +380,6 @@ fun StudySessionPreview() {
     FlashCardsTheme {
         StudySessionScreen(
             onClose = {},
-            question = "¿Qué ciencia estudia el tratamiento automático de la información?",
-            answer = "La informática, que procede de la fusión de las palabras información y automática.",
-            currentCardIndex = 0,
             totalCards = 50
         )
     }

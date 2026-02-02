@@ -9,7 +9,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -17,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -43,12 +49,16 @@ fun DashboardScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 20.dp)
+                .padding(horizontal = 20.dp, vertical = 8.dp)
         ) {
             item { Header(userName) }
             item { DailyGoalCard(streakDays, masteredCards, dailyGoalProgress) }
             item { StartReviewButton(onStartReview) }
-            item { SectionHeader(title = "My Decks", action = "View All") }
+            item { SectionHeader(title = "Recent Decks", action = null) }
+            items(recentSessions) { session ->
+                SessionItem(session)
+            }
+            item { SectionHeader(title = "All Decks", action = "View All") }
             item {
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -58,10 +68,6 @@ fun DashboardScreen(
                         DeckCard(deck, onClick = { onDeckClick(deck) })
                     }
                 }
-            }
-            item { SectionHeader(title = "Recent Sessions", action = null) }
-            items(recentSessions) { session ->
-                SessionItem(session)
             }
         }
     }
@@ -117,14 +123,14 @@ fun DailyGoalCard(streak: String, mastered: String, progress: Float) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 StatItem("🔥", "STREAK", "$streak Days")
-                Divider(modifier = Modifier.height(40.dp).width(1.dp), color = Color.LightGray)
+                VerticalDivider(modifier = Modifier.height(40.dp), color = Color.LightGray)
                 StatItem("🏆", "MASTERED", "$mastered Cards")
             }
             Spacer(modifier = Modifier.height(20.dp))
             Text("Daily Goal", fontWeight = FontWeight.Bold, color = TextDark)
             Spacer(modifier = Modifier.height(8.dp))
             LinearProgressIndicator(
-                progress = progress,
+                progress = { progress },
                 modifier = Modifier.fillMaxWidth().height(8.dp).clip(CircleShape),
                 color = AccentBlue,
                 trackColor = Color(0xFFF0F0F0)
@@ -200,8 +206,15 @@ fun DeckCard(deck: Deck, onClick: () -> Unit = {}) {
                 Text(deck.icon, fontSize = 40.sp)
             }
             Spacer(modifier = Modifier.height(12.dp))
-            Text(deck.name, fontWeight = FontWeight.Bold, color = TextDark)
-            Text("${deck.cardCount} cards • ${deck.progress}%", fontSize = 12.sp, color = TextGray)
+            Text(
+                deck.name,
+                fontWeight = FontWeight.Bold,
+                color = TextDark,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                fontSize = 14.sp
+            )
+            Text("${deck.cardCount} cards • ${deck.progress}%", fontSize = 12.sp, color = TextGray, maxLines = 1)
         }
     }
 }
@@ -247,7 +260,7 @@ fun BottomNavigationBar(onLibraryClick: () -> Unit) {
             onClick = {}
         )
         NavigationBarItem(
-            icon = { Icon(Icons.Default.List, null) },
+            icon = { Icon(Icons.AutoMirrored.Filled.List, null) },
             label = { Text("Library") },
             selected = false,
             onClick = onLibraryClick
