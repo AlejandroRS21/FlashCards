@@ -17,17 +17,50 @@ class MainActivity : ComponentActivity() {
         setContent {
             FlashCardsTheme {
                 var currentScreen by remember { mutableStateOf(Screen.Dashboard) }
+                var decks by remember { mutableStateOf(emptyList<Deck>()) }
+                var selectedDeck by remember { mutableStateOf<Deck?>(null) }
+
+                // Cargar decks al iniciar
+                LaunchedEffect(Unit) {
+                    val dataManager = DataManager(this@MainActivity)
+                    decks = dataManager.getAllDecks()
+                }
 
                 when (currentScreen) {
                     Screen.Dashboard -> DashboardScreen(
                         onStartReview = { currentScreen = Screen.Study },
-                        onImportClick = { currentScreen = Screen.Import }
+                        onImportClick = { currentScreen = Screen.Import },
+                        onDeckClick = { deck ->
+                            selectedDeck = deck
+                            currentScreen = Screen.Study
+                        },
+                        decks = decks
                     )
                     Screen.Study -> StudySessionScreen(
-                        onClose = { currentScreen = Screen.Dashboard }
+                        onClose = {
+                            currentScreen = Screen.Dashboard
+                            // Recargar decks en caso de que se hayan actualizado
+                            val dataManager = DataManager(this@MainActivity)
+                            decks = dataManager.getAllDecks()
+                        },
+                        deck = selectedDeck,
+                        onDeckUpdate = { updatedDeck ->
+                            // Actualizar el deck en la base de datos
+                            val dataManager = DataManager(this@MainActivity)
+                            dataManager.updateDeck(updatedDeck)
+
+                            // Actualizar la lista de decks
+                            decks = dataManager.getAllDecks()
+                            selectedDeck = updatedDeck
+                        }
                     )
                     Screen.Import -> ImportScreen(
-                        onBack = { currentScreen = Screen.Dashboard }
+                        onBack = { currentScreen = Screen.Dashboard },
+                        onDeckCreated = {
+                            // Recargar decks después de crear
+                            val dataManager = DataManager(this@MainActivity)
+                            decks = dataManager.getAllDecks()
+                        }
                     )
                 }
             }

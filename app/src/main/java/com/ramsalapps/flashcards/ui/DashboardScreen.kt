@@ -28,6 +28,7 @@ import com.ramsalapps.flashcards.ui.theme.*
 fun DashboardScreen(
     onStartReview: () -> Unit,
     onImportClick: () -> Unit,
+    onDeckClick: (Deck) -> Unit = {},
     decks: List<Deck> = emptyList(),
     recentSessions: List<Session> = emptyList(),
     streakDays: String = "0",
@@ -54,7 +55,7 @@ fun DashboardScreen(
                     contentPadding = PaddingValues(vertical = 8.dp)
                 ) {
                     items(decks) { deck ->
-                        DeckCard(deck)
+                        DeckCard(deck, onClick = { onDeckClick(deck) })
                     }
                 }
             }
@@ -178,9 +179,11 @@ fun SectionHeader(title: String, action: String?) {
 }
 
 @Composable
-fun DeckCard(deck: Deck) {
+fun DeckCard(deck: Deck, onClick: () -> Unit = {}) {
     Card(
-        modifier = Modifier.width(160.dp),
+        modifier = Modifier
+            .width(160.dp)
+            .clickable { onClick() },
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         shape = RoundedCornerShape(16.dp)
@@ -276,8 +279,8 @@ fun DashboardPreview() {
             masteredCards = "240",
             dailyGoalProgress = 0.75f,
             decks = listOf(
-                Deck("Medical Terms", 120, 80, "🩺"),
-                Deck("Spanish 101", 45, 30, "💃")
+                Deck(name = "Medical Terms", cardCount = 120, progress = 80, icon = "🩺"),
+                Deck(name = "Spanish 101", cardCount = 45, progress = 30, icon = "💃")
             ),
             recentSessions = listOf(
                 Session("Medical Terms", "Yesterday", "15 mins", 12, "🩺"),
