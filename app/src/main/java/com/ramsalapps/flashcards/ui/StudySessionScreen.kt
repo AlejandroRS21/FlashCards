@@ -37,6 +37,9 @@ import com.ramsalapps.flashcards.Deck
 import com.ramsalapps.flashcards.ui.theme.*
 import com.ramsalapps.flashcards.ui.theme.Spacing
 import com.ramsalapps.flashcards.ui.theme.BorderRadius
+import com.ramsalapps.flashcards.designsystem.components.DesignSystemButton
+import com.ramsalapps.flashcards.designsystem.components.DesignSystemCard
+import com.ramsalapps.flashcards.designsystem.components.ButtonSize
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
@@ -355,39 +358,21 @@ fun StudySessionScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Button(
+                DesignSystemButton(
                     onClick = { goToPreviousWithAnimation() },
+                    text = "Previous",
+                    size = ButtonSize.Medium,
                     enabled = currentIndex > 0,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(48.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = AccentBlue,
-                        disabledContainerColor = Color.LightGray
-                    ),
-                    shape = RoundedCornerShape(BorderRadius.md)
-                ) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Previous")
-                    Spacer(modifier = Modifier.width(Spacing.sm))
-                    Text("Previous")
-                }
+                    modifier = Modifier.weight(1f)
+                )
 
-                Button(
+                DesignSystemButton(
                     onClick = { goToNextWithAnimation() },
+                    text = "Next",
+                    size = ButtonSize.Medium,
                     enabled = currentIndex < displayTotal - 1,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(48.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = AccentBlue,
-                        disabledContainerColor = Color.LightGray
-                    ),
-                    shape = RoundedCornerShape(BorderRadius.md)
-                ) {
-                    Text("Next")
-                    Spacer(modifier = Modifier.width(Spacing.sm))
-                    Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Next")
-                }
+                    modifier = Modifier.weight(1f)
+                )
             }
 
             Spacer(modifier = Modifier.height(12.dp))

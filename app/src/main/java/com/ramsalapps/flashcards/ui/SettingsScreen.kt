@@ -19,6 +19,7 @@ import com.ramsalapps.flashcards.DataManager
 import com.ramsalapps.flashcards.ui.theme.*
 import com.ramsalapps.flashcards.ui.theme.Spacing
 import com.ramsalapps.flashcards.ui.theme.BorderRadius
+import com.ramsalapps.flashcards.designsystem.components.DesignSystemCard
 
 @Composable
 fun SettingsScreen(

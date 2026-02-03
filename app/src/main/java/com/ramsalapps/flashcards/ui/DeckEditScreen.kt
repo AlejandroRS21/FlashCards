@@ -26,6 +26,9 @@ import com.ramsalapps.flashcards.Flashcard
 import com.ramsalapps.flashcards.ui.theme.*
 import com.ramsalapps.flashcards.ui.theme.Spacing
 import com.ramsalapps.flashcards.ui.theme.BorderRadius
+import com.ramsalapps.flashcards.designsystem.components.DesignSystemButton
+import com.ramsalapps.flashcards.designsystem.components.DesignSystemCard
+import com.ramsalapps.flashcards.designsystem.components.ButtonSize
 
 @Composable
 fun DeckEditScreen(
@@ -67,20 +70,16 @@ fun DeckEditScreen(
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp
             )
-            Button(
+            DesignSystemButton(
                 onClick = {
                     val updatedDeck = currentDeck.copy(flashcards = flashcards)
                     dataManager.updateDeck(updatedDeck)
                     onDeckUpdate(updatedDeck)
                     onBack()
                 },
-                modifier = Modifier.height(40.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = AccentBlue),
-                shape = RoundedCornerShape(BorderRadius.sm),
-                contentPadding = PaddingValues(horizontal = 16.dp)
-            ) {
-                Text("Done", color = Color.White, fontSize = 14.sp)
-            }
+                text = "Done",
+                size = ButtonSize.Small
+            )
         }
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -113,19 +112,12 @@ fun DeckEditScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Add new card button
-        Button(
+        DesignSystemButton(
             onClick = { showAddDialog = true },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = AccentPink),
-            shape = RoundedCornerShape(BorderRadius.md)
-        ) {
-            Icon(Icons.Default.Add, contentDescription = "Add", tint = Color.White)
-            Spacer(modifier = Modifier.width(Spacing.sm))
-            Text("Add New Card", color = Color.White, fontWeight = FontWeight.Bold)
-        }
+            text = "Add New Card",
+            size = ButtonSize.Medium,
+            modifier = Modifier.fillMaxWidth()
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 

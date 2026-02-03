@@ -36,6 +36,9 @@ import com.ramsalapps.flashcards.Deck
 import com.ramsalapps.flashcards.ui.theme.*
 import com.ramsalapps.flashcards.ui.theme.Spacing
 import com.ramsalapps.flashcards.ui.theme.BorderRadius
+import com.ramsalapps.flashcards.designsystem.components.DesignSystemButton
+import com.ramsalapps.flashcards.designsystem.components.DesignSystemCard
+import com.ramsalapps.flashcards.designsystem.components.ButtonSize
 
 enum class ImportStep {
     SELECT_FILE,
@@ -332,36 +335,15 @@ fun SelectFileStep(
             }
 
             item {
-                Button(
+                DesignSystemButton(
                     onClick = onNextClick,
+                    text = if (isLoading) "Processing..." else "Process CSV",
+                    size = ButtonSize.Large,
                     enabled = selectedFileUri != null && deckName.isNotBlank() && !isLoading,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = Spacing.xl)
-                        .height(56.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = AccentPink,
-                        disabledContainerColor = Color.LightGray
-                    ),
-                    shape = RoundedCornerShape(BorderRadius.full)
-                ) {
-                    if (isLoading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            color = TextDark,
-                            strokeWidth = 2.dp
-                        )
-                        Spacer(modifier = Modifier.width(Spacing.sm))
-                        Text("Processing...", color = TextDark, fontWeight = FontWeight.Bold)
-                    } else {
-                        Text(
-                            "Process CSV",
-                            color = TextDark,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp
-                        )
-                    }
-                }
+                )
             }
         }
     }
@@ -513,36 +495,15 @@ fun ReviewCardsStep(
             }
 
             item {
-                Button(
+                DesignSystemButton(
                     onClick = onCreateDeck,
+                    text = if (isLoading) "Creating..." else "Create Deck",
+                    size = ButtonSize.Large,
                     enabled = deckName.isNotBlank() && !isLoading,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = Spacing.xl)
-                        .height(56.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = AccentPink,
-                        disabledContainerColor = Color.LightGray
-                    ),
-                    shape = RoundedCornerShape(BorderRadius.full)
-                ) {
-                    if (isLoading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            color = TextDark,
-                            strokeWidth = 2.dp
-                        )
-                        Spacer(modifier = Modifier.width(Spacing.sm))
-                        Text("Creating...", color = TextDark, fontWeight = FontWeight.Bold)
-                    } else {
-                        Text(
-                            "Create Deck",
-                            color = TextDark,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp
-                        )
-                    }
-                }
+                )
             }
         }
     }
@@ -586,18 +547,12 @@ fun UploadZone(selectedFileName: String?, onBrowseClick: () -> Unit) {
                 modifier = Modifier.padding(horizontal = Spacing.lg)
             )
             Spacer(modifier = Modifier.height(16.dp))
-            Button(
+            DesignSystemButton(
                 onClick = onBrowseClick,
-                colors = ButtonDefaults.buttonColors(containerColor = AccentPink),
-                shape = RoundedCornerShape(BorderRadius.lg),
-                contentPadding = PaddingValues(horizontal = 24.dp)
-            ) {
-                Text(
-                    if (selectedFileName != null) "Change File" else "Browse Files",
-                    color = TextDark,
-                    fontWeight = FontWeight.Bold
-                )
-            }
+                text = if (selectedFileName != null) "Change File" else "Browse Files",
+                size = ButtonSize.Medium,
+                modifier = Modifier
+            )
         }
     }
 }
