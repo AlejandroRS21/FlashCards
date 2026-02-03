@@ -35,6 +35,8 @@ import androidx.compose.ui.unit.TextUnit
 import com.ramsalapps.flashcards.DataManager
 import com.ramsalapps.flashcards.Deck
 import com.ramsalapps.flashcards.ui.theme.*
+import com.ramsalapps.flashcards.ui.theme.Spacing
+import com.ramsalapps.flashcards.ui.theme.BorderRadius
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
@@ -127,7 +129,7 @@ fun StudySessionScreen(
             .fillMaxSize()
             .background(PastelPurple)
             .systemBarsPadding()
-            .padding(24.dp)
+            .padding(Spacing.xl)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -150,7 +152,7 @@ fun StudySessionScreen(
                     fontWeight = FontWeight.Bold,
                     fontSize = 20.sp
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(Spacing.sm))
                 Icon(
                     Icons.Default.Edit,
                     contentDescription = "Edit name",
@@ -172,7 +174,7 @@ fun StudySessionScreen(
             Text("Session Progress", fontWeight = FontWeight.Bold, fontSize = 14.sp)
             Text("${currentIndex + 1} / $displayTotal cards", color = TextGray, fontSize = 14.sp)
         }
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(Spacing.sm))
         LinearProgressIndicator(
             progress = { if (displayTotal > 0) (currentIndex + 1).toFloat() / displayTotal else 0f },
             modifier = Modifier.fillMaxWidth().height(8.dp).clip(CircleShape),
@@ -247,7 +249,7 @@ fun StudySessionScreen(
                                     }
                                 }
                             },
-                        shape = RoundedCornerShape(24.dp),
+                        shape = RoundedCornerShape(BorderRadius.lg),
                         colors = CardDefaults.cardColors(
                             containerColor = cardBackgroundColors[cardIndex % cardBackgroundColors.size]
                         ),
@@ -262,7 +264,7 @@ fun StudySessionScreen(
                                             rotationY = 180f
                                         }
                                     }
-                                    .padding(32.dp),
+                                    .padding(Spacing.xxl),
                                 contentAlignment = Alignment.Center
                             ) {
                                 if (flipRotation <= 90f) {
@@ -306,7 +308,7 @@ fun StudySessionScreen(
                             Box(
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .padding(32.dp),
+                                    .padding(Spacing.xxl),
                                 contentAlignment = Alignment.Center
                             ) {
                                 if (bionicReadingEnabled) {
@@ -363,10 +365,10 @@ fun StudySessionScreen(
                         containerColor = AccentBlue,
                         disabledContainerColor = Color.LightGray
                     ),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(BorderRadius.md)
                 ) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Previous")
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(Spacing.sm))
                     Text("Previous")
                 }
 
@@ -380,10 +382,10 @@ fun StudySessionScreen(
                         containerColor = AccentBlue,
                         disabledContainerColor = Color.LightGray
                     ),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(BorderRadius.md)
                 ) {
                     Text("Next")
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(Spacing.sm))
                     Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Next")
                 }
             }
@@ -402,10 +404,10 @@ fun StudySessionScreen(
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFFFF6B9D)  // Rosa vibrante
                     ),
-                    shape = RoundedCornerShape(14.dp)
+                    shape = RoundedCornerShape(BorderRadius.lg)
                 ) {
                     Icon(Icons.Default.Casino, contentDescription = "Shuffle", tint = Color.White)
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(Spacing.sm))
                     Text("Shuffle", fontWeight = FontWeight.Bold, color = Color.White)
                 }
 
@@ -417,10 +419,10 @@ fun StudySessionScreen(
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFFFFA500)  // Naranja vibrante
                     ),
-                    shape = RoundedCornerShape(14.dp)
+                    shape = RoundedCornerShape(BorderRadius.lg)
                 ) {
                     Icon(Icons.Default.Refresh, contentDescription = "Reset", tint = Color.White)
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(Spacing.sm))
                     Text("Reset", fontWeight = FontWeight.Bold, color = Color.White)
                 }
             }
@@ -436,7 +438,7 @@ fun StudySessionScreen(
                     value = editedDeckName,
                     onValueChange = { editedDeckName = it },
                     label = { Text("Deck Name") },
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(BorderRadius.md),
                     modifier = Modifier.fillMaxWidth()
                 )
             },
@@ -494,3 +496,4 @@ fun StudySessionPreview() {
         )
     }
 }
+

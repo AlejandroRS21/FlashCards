@@ -24,6 +24,8 @@ import com.ramsalapps.flashcards.DataManager
 import com.ramsalapps.flashcards.Deck
 import com.ramsalapps.flashcards.Flashcard
 import com.ramsalapps.flashcards.ui.theme.*
+import com.ramsalapps.flashcards.ui.theme.Spacing
+import com.ramsalapps.flashcards.ui.theme.BorderRadius
 
 @Composable
 fun DeckEditScreen(
@@ -46,7 +48,7 @@ fun DeckEditScreen(
             .fillMaxSize()
             .background(PastelPurple)
             .systemBarsPadding()
-            .padding(24.dp)
+            .padding(Spacing.xl)
     ) {
         // Header
         Row(
@@ -74,7 +76,7 @@ fun DeckEditScreen(
                 },
                 modifier = Modifier.height(40.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = AccentBlue),
-                shape = RoundedCornerShape(8.dp),
+                shape = RoundedCornerShape(BorderRadius.sm),
                 contentPadding = PaddingValues(horizontal = 16.dp)
             ) {
                 Text("Done", color = Color.White, fontSize = 14.sp)
@@ -87,16 +89,16 @@ fun DeckEditScreen(
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = Color.White),
-            shape = RoundedCornerShape(12.dp)
+            shape = RoundedCornerShape(BorderRadius.md)
         ) {
             Row(
-                modifier = Modifier.padding(16.dp),
+                modifier = Modifier.padding(Spacing.lg),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
                     modifier = Modifier
                         .size(48.dp)
-                        .background(PastelGreen, RoundedCornerShape(8.dp)),
+                        .background(PastelGreen, RoundedCornerShape(BorderRadius.sm)),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(currentDeck.icon, fontSize = 24.sp)
@@ -118,10 +120,10 @@ fun DeckEditScreen(
                 .fillMaxWidth()
                 .height(48.dp),
             colors = ButtonDefaults.buttonColors(containerColor = AccentPink),
-            shape = RoundedCornerShape(12.dp)
+            shape = RoundedCornerShape(BorderRadius.md)
         ) {
             Icon(Icons.Default.Add, contentDescription = "Add", tint = Color.White)
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(Spacing.sm))
             Text("Add New Card", color = Color.White, fontWeight = FontWeight.Bold)
         }
 
@@ -129,7 +131,7 @@ fun DeckEditScreen(
 
         // List of flashcards
         Text("Cards (${flashcards.size})", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(Spacing.sm))
 
         LazyColumn(
             modifier = Modifier
@@ -173,15 +175,15 @@ fun DeckEditScreen(
                         label = { Text("Question") },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = 8.dp),
-                        shape = RoundedCornerShape(12.dp)
+                            .padding(bottom = Spacing.sm),
+                        shape = RoundedCornerShape(BorderRadius.md)
                     )
                     OutlinedTextField(
                         value = newAnswer,
                         onValueChange = { newAnswer = it },
                         label = { Text("Answer") },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(BorderRadius.md),
                         minLines = 3
                     )
                 }
@@ -243,11 +245,11 @@ fun FlashcardEditItem(
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(BorderRadius.md)
     ) {
         Row(
             modifier = Modifier
-                .padding(16.dp)
+                .padding(Spacing.lg)
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
@@ -268,7 +270,7 @@ fun FlashcardEditItem(
                     maxLines = 1
                 )
             }
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(Spacing.sm))
             Icon(
                 Icons.Default.Edit,
                 contentDescription = "Edit",
@@ -277,7 +279,7 @@ fun FlashcardEditItem(
                     .size(24.dp)
                     .clickable { onEdit() }
             )
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(Spacing.sm))
             Icon(
                 Icons.Default.Delete,
                 contentDescription = "Delete",
@@ -289,3 +291,4 @@ fun FlashcardEditItem(
         }
     }
 }
+

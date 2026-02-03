@@ -5,6 +5,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -31,6 +33,12 @@ import androidx.compose.ui.unit.sp
 import com.ramsalapps.flashcards.Deck
 import com.ramsalapps.flashcards.Session
 import com.ramsalapps.flashcards.ui.theme.*
+import com.ramsalapps.flashcards.ui.theme.Spacing
+import com.ramsalapps.flashcards.ui.theme.BorderRadius
+import androidx.compose.foundation.layout.BoxWithConstraints
+import com.ramsalapps.flashcards.ui.theme.getDeviceType
+import com.ramsalapps.flashcards.ui.theme.getResponsivePadding
+import com.ramsalapps.flashcards.ui.theme.DeviceType
 
 @Composable
 fun DashboardScreen(
@@ -49,27 +57,63 @@ fun DashboardScreen(
     Scaffold(
         bottomBar = { BottomNavigationBar(onLibraryClick = onImportClick, onSettingsClick = onSettingsClick, currentScreen = "home") }
     ) { padding ->
-        LazyColumn(
+        BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 20.dp, vertical = 8.dp)
         ) {
-            item { Header(userName) }
-            item { DailyGoalCard(streakDays, masteredCards, dailyGoalProgress) }
-            item { StartReviewButton(onStartReview) }
-            item { SectionHeader(title = "Recent Decks", action = null) }
-            items(recentSessions) { session ->
-                SessionItem(session)
-            }
-            item { SectionHeader(title = "All Decks", action = "View All") }
-            item {
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    contentPadding = PaddingValues(vertical = 8.dp)
-                ) {
-                    items(decks) { deck ->
-                        DeckCard(deck, onClick = { onDeckClick(deck) }, onDelete = { onDeckDelete(it) })
+            val responsivePadding = getResponsivePadding(maxWidth)
+            val deviceType = getDeviceType(maxWidth)
+            
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = responsivePadding, vertical = Spacing.sm)
+            ) {
+                item { Header(userName) }
+                item { DailyGoalCard(streakDays, masteredCards, dailyGoalProgress) }
+                item { StartReviewButton(onStartReview) }
+                item { SectionHeader(title = "Recent Decks", action = null) }
+                items(recentSessions) { session ->
+                    SessionItem(session)
+                }
+                item { SectionHeader(title = "All Decks", action = "View All") }
+                // Usar 'items' directamente en LazyColumn para decks
+                if (deviceType == DeviceType.MOBILE) {
+                    item {
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.lg),
+                            contentPadding = PaddingValues(vertical = Spacing.sm),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            items(decks) { deck ->
+                                DeckCard(
+                                    deck,
+                                    onClick = { onDeckClick(deck) },
+                                    onDelete = { onDeckDelete(it) },
+                                    modifier = Modifier.width(160.dp)
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    item {
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(if (deviceType == DeviceType.TABLET) 2 else 3),
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.lg),
+                            verticalArrangement = Arrangement.spacedBy(Spacing.lg),
+                            modifier = Modifier.fillMaxWidth(),
+                            userScrollEnabled = false
+                        ) {
+                            items(decks.size) { index ->
+                                DeckCard(
+                                    decks[index],
+                                    onClick = { onDeckClick(decks[index]) },
+                                    onDelete = { onDeckDelete(it) },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -82,7 +126,7 @@ fun Header(userName: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 24.dp),
+            .padding(vertical = Spacing.xl),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -119,7 +163,7 @@ fun DailyGoalCard(streak: String, mastered: String, progress: Float) {
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape = RoundedCornerShape(16.dp)
+        shape = RoundedCornerShape(BorderRadius.lg)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Row(
@@ -130,16 +174,16 @@ fun DailyGoalCard(streak: String, mastered: String, progress: Float) {
                 VerticalDivider(modifier = Modifier.height(40.dp), color = Color.LightGray)
                 StatItem("🏆", "MASTERED", "$mastered Cards")
             }
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(Spacing.lg))
             Text("Daily Goal", fontWeight = FontWeight.Bold, color = TextDark)
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(Spacing.sm))
             LinearProgressIndicator(
                 progress = { progress },
                 modifier = Modifier.fillMaxWidth().height(8.dp).clip(CircleShape),
                 color = AccentBlue,
                 trackColor = Color(0xFFF0F0F0)
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(Spacing.sm))
             BionicText("Keep going! You're doing great.", color = TextGray, fontSize = 14.sp)
         }
     }
@@ -149,7 +193,7 @@ fun DailyGoalCard(streak: String, mastered: String, progress: Float) {
 fun StatItem(emoji: String, label: String, value: String) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(emoji, fontSize = 24.sp)
-        Spacer(modifier = Modifier.width(8.dp))
+        Spacer(modifier = Modifier.width(Spacing.sm))
         Column {
             Text(label, style = MaterialTheme.typography.labelSmall, color = TextGray)
             Text(value, fontWeight = FontWeight.Bold, color = TextDark)
@@ -166,10 +210,10 @@ fun StartReviewButton(onClick: () -> Unit) {
             .padding(vertical = 24.dp)
             .height(56.dp),
         colors = ButtonDefaults.buttonColors(containerColor = AccentBlue),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(BorderRadius.md)
     ) {
         Icon(Icons.Default.PlayArrow, contentDescription = null)
-        Spacer(modifier = Modifier.width(8.dp))
+        Spacer(modifier = Modifier.width(Spacing.sm))
         Text("Start Daily Review", fontSize = 18.sp, fontWeight = FontWeight.Bold)
     }
 }
@@ -177,7 +221,7 @@ fun StartReviewButton(onClick: () -> Unit) {
 @Composable
 fun SectionHeader(title: String, action: String?) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.md),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -189,29 +233,33 @@ fun SectionHeader(title: String, action: String?) {
 }
 
 @Composable
-fun DeckCard(deck: Deck, onClick: () -> Unit = {}, onDelete: (String) -> Unit = {}) {
+fun DeckCard(
+    deck: Deck,
+    onClick: () -> Unit = {},
+    onDelete: (String) -> Unit = {},
+    modifier: Modifier = Modifier.width(160.dp)
+) {
     var showDeleteDialog by remember { mutableStateOf(false) }
 
     Card(
-        modifier = Modifier
-            .width(160.dp)
+        modifier = modifier
             .clickable { onClick() },
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape = RoundedCornerShape(16.dp)
+        shape = RoundedCornerShape(BorderRadius.lg)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(Spacing.lg)) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 8.dp),
+                    .padding(bottom = Spacing.sm),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
                     modifier = Modifier
                         .size(32.dp)
-                        .clip(RoundedCornerShape(8.dp))
+                        .clip(RoundedCornerShape(BorderRadius.sm))
                         .background(if (deck.name.contains("Medical")) PastelGreen else PastelPurple),
                     contentAlignment = Alignment.Center
                 ) {
@@ -231,7 +279,7 @@ fun DeckCard(deck: Deck, onClick: () -> Unit = {}, onDelete: (String) -> Unit = 
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(60.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(RoundedCornerShape(BorderRadius.sm))
                     .background(if (deck.name.contains("Medical")) PastelGreen else PastelPurple),
                 contentAlignment = Alignment.Center
             ) {
@@ -281,16 +329,16 @@ fun SessionItem(session: Session) {
         modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(BorderRadius.md)
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(Spacing.lg),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
                     .size(40.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(RoundedCornerShape(BorderRadius.sm))
                     .background(PastelGreen),
                 contentAlignment = Alignment.Center
             ) {
@@ -368,9 +416,10 @@ fun BottomNavigationBar(
     }
 }
 
-@Preview(showBackground = true)
+// Preview responsivos para diferentes tamaños de pantalla
+@Preview(name = "Mobile", widthDp = 360, heightDp = 800)
 @Composable
-fun DashboardPreview() {
+fun DashboardPreviewMobile() {
     FlashCardsTheme {
         DashboardScreen(
             onStartReview = {},
@@ -381,7 +430,8 @@ fun DashboardPreview() {
             dailyGoalProgress = 0.75f,
             decks = listOf(
                 Deck(name = "Medical Terms", cardCount = 120, progress = 80, icon = "🩺"),
-                Deck(name = "Spanish 101", cardCount = 45, progress = 30, icon = "💃")
+                Deck(name = "Spanish 101", cardCount = 45, progress = 30, icon = "💃"),
+                Deck(name = "History", cardCount = 75, progress = 50, icon = "📜")
             ),
             recentSessions = listOf(
                 Session("Medical Terms", "Yesterday", "15 mins", 12, "🩺"),
@@ -390,3 +440,56 @@ fun DashboardPreview() {
         )
     }
 }
+
+@Preview(name = "Tablet", widthDp = 600, heightDp = 1000)
+@Composable
+fun DashboardPreviewTablet() {
+    FlashCardsTheme {
+        DashboardScreen(
+            onStartReview = {},
+            onImportClick = {},
+            userName = "Alex",
+            streakDays = "7",
+            masteredCards = "240",
+            dailyGoalProgress = 0.75f,
+            decks = listOf(
+                Deck(name = "Medical Terms", cardCount = 120, progress = 80, icon = "🩺"),
+                Deck(name = "Spanish 101", cardCount = 45, progress = 30, icon = "💃"),
+                Deck(name = "History", cardCount = 75, progress = 50, icon = "📜"),
+                Deck(name = "Biology", cardCount = 60, progress = 45, icon = "🧬")
+            ),
+            recentSessions = listOf(
+                Session("Medical Terms", "Yesterday", "15 mins", 12, "🩺"),
+                Session("World History", "2 days ago", "10 mins", 5, "📜")
+            )
+        )
+    }
+}
+
+@Preview(name = "Desktop", widthDp = 1200, heightDp = 800)
+@Composable
+fun DashboardPreviewDesktop() {
+    FlashCardsTheme {
+        DashboardScreen(
+            onStartReview = {},
+            onImportClick = {},
+            userName = "Alex",
+            streakDays = "7",
+            masteredCards = "240",
+            dailyGoalProgress = 0.75f,
+            decks = listOf(
+                Deck(name = "Medical Terms", cardCount = 120, progress = 80, icon = "🩺"),
+                Deck(name = "Spanish 101", cardCount = 45, progress = 30, icon = "💃"),
+                Deck(name = "History", cardCount = 75, progress = 50, icon = "📜"),
+                Deck(name = "Biology", cardCount = 60, progress = 45, icon = "🧬"),
+                Deck(name = "Chemistry", cardCount = 85, progress = 70, icon = "⚗️"),
+                Deck(name = "Physics", cardCount = 95, progress = 55, icon = "⚛️")
+            ),
+            recentSessions = listOf(
+                Session("Medical Terms", "Yesterday", "15 mins", 12, "🩺"),
+                Session("World History", "2 days ago", "10 mins", 5, "📜")
+            )
+        )
+    }
+}
+

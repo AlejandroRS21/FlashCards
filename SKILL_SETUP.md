@@ -9,17 +9,17 @@
 ## 📁 Estructura Creada
 
 ```
-skills/
-├── README.md                              ← Guía maestro
-└── android-mobile-design/
-    ├── skill.config.json                  ← Configuración
-    └── docs/
-        ├── README.md                      ← Inicio
-        ├── ANDROID_MOBILE_DESIGN_SKILL.md ← Especificaciones
-        ├── SKILL_QUICK_REFERENCE.md       ← Referencia rápida
-        ├── FLASHCARDS_IMPLEMENTATION.md   ← Ejemplos
-        ├── INTEGRATION_GUIDE.md           ← Setup Android
-        └── VALIDATION_CHECKLIST.md        ← Validación
+.github/
+├── skills/
+    └── android-mobile-design/
+        ├── skill.config.json                  ← Configuración
+        └── docs/
+            ├── README.md                      ← Inicio
+            ├── ANDROID_MOBILE_DESIGN_SKILL.md ← Especificaciones
+            ├── SKILL_QUICK_REFERENCE.md       ← Referencia rápida
+            ├── FLASHCARDS_IMPLEMENTATION.md   ← Ejemplos
+            ├── INTEGRATION_GUIDE.md           ← Setup Android
+            └── VALIDATION_CHECKLIST.md        ← Validación
 ```
 
 ---
@@ -32,4 +32,4 @@ skills/
 
 ---
 
-**Documentación**: Disponible en `skills/android-mobile-design/docs/`
+**Documentación**: Disponible en `.github/skills/android-mobile-design/docs/`

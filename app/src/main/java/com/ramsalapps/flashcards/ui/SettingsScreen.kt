@@ -17,6 +17,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ramsalapps.flashcards.DataManager
 import com.ramsalapps.flashcards.ui.theme.*
+import com.ramsalapps.flashcards.ui.theme.Spacing
+import com.ramsalapps.flashcards.ui.theme.BorderRadius
 
 @Composable
 fun SettingsScreen(
@@ -34,7 +36,7 @@ fun SettingsScreen(
             .fillMaxSize()
             .background(PastelPurple)
             .systemBarsPadding()
-            .padding(24.dp)
+            .padding(Spacing.xl)
     ) {
         // Header
         Row(
@@ -63,11 +65,11 @@ fun SettingsScreen(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = Color.White),
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-            shape = RoundedCornerShape(12.dp)
+            shape = RoundedCornerShape(BorderRadius.md)
         ) {
             Row(
                 modifier = Modifier
-                    .padding(16.dp)
+                    .padding(Spacing.lg)
                     .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -75,14 +77,14 @@ fun SettingsScreen(
                 Column(modifier = Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text("Bionic Reading", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(Spacing.sm))
                         Surface(
                             color = PastelBlue,
-                            shape = RoundedCornerShape(4.dp)
+                            shape = RoundedCornerShape(BorderRadius.xs)
                         ) {
                             Text(
                                 "BETA",
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                modifier = Modifier.padding(horizontal = Spacing.xs, vertical = Spacing.xs),
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = AccentBlue
@@ -117,18 +119,18 @@ fun SettingsScreen(
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF5E6)),
-            shape = RoundedCornerShape(12.dp),
+            shape = RoundedCornerShape(BorderRadius.md),
             border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFE4B5))
         ) {
             Column(
-                modifier = Modifier.padding(16.dp)
+                modifier = Modifier.padding(Spacing.lg)
             ) {
                 Text(
                     "About Bionic Reading",
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(Spacing.sm))
                 Text(
                     "Bionic Reading is a technique that highlights the first letter(s) of each word. This focuses your eyes on the beginning of each word, helping you read faster and with better comprehension.",
                     fontSize = 12.sp,
@@ -139,3 +141,4 @@ fun SettingsScreen(
         }
     }
 }
+

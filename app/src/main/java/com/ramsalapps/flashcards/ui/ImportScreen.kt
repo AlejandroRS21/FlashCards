@@ -34,6 +34,8 @@ import com.ramsalapps.flashcards.DeckWithFlashcards
 import com.ramsalapps.flashcards.Flashcard
 import com.ramsalapps.flashcards.Deck
 import com.ramsalapps.flashcards.ui.theme.*
+import com.ramsalapps.flashcards.ui.theme.Spacing
+import com.ramsalapps.flashcards.ui.theme.BorderRadius
 
 enum class ImportStep {
     SELECT_FILE,
@@ -207,7 +209,7 @@ fun SelectFileStep(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(4.dp),
+                    .padding(Spacing.xs),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -238,7 +240,7 @@ fun SelectFileStep(
                 .fillMaxSize()
                 .padding(padding)
                 .systemBarsPadding()
-                .padding(horizontal = 24.dp, vertical = 16.dp),
+                .padding(horizontal = Spacing.xl, vertical = Spacing.lg),
             verticalArrangement = Arrangement.spacedBy(24.dp),
             contentPadding = PaddingValues(bottom = 24.dp)
         ) {
@@ -246,12 +248,12 @@ fun SelectFileStep(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = Color(0xFFE3F2FD)),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(BorderRadius.md)
                 ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(12.dp),
+                            .padding(Spacing.md),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
@@ -275,13 +277,13 @@ fun SelectFileStep(
                 item {
                     Column {
                         Text("Deck Name", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(Spacing.sm))
                         OutlinedTextField(
                             value = deckName,
                             onValueChange = onDeckNameChange,
                             modifier = Modifier.fillMaxWidth(),
                             placeholder = { Text("Example: Biology Exam") },
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(BorderRadius.md),
                             colors = TextFieldDefaults.colors(
                                 focusedContainerColor = Color.White,
                                 unfocusedContainerColor = Color.White,
@@ -303,12 +305,12 @@ fun SelectFileStep(
                             .fillMaxWidth()
                             .background(Color(0xFFFFEBEE)),
                         colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE)),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(BorderRadius.md)
                     ) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(16.dp),
+                                .padding(Spacing.lg),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
@@ -335,13 +337,13 @@ fun SelectFileStep(
                     enabled = selectedFileUri != null && deckName.isNotBlank() && !isLoading,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 24.dp)
+                        .padding(vertical = Spacing.xl)
                         .height(56.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = AccentPink,
                         disabledContainerColor = Color.LightGray
                     ),
-                    shape = RoundedCornerShape(28.dp)
+                    shape = RoundedCornerShape(BorderRadius.full)
                 ) {
                     if (isLoading) {
                         CircularProgressIndicator(
@@ -349,7 +351,7 @@ fun SelectFileStep(
                             color = TextDark,
                             strokeWidth = 2.dp
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(Spacing.sm))
                         Text("Processing...", color = TextDark, fontWeight = FontWeight.Bold)
                     } else {
                         Text(
@@ -379,7 +381,7 @@ fun ReviewCardsStep(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(4.dp),
+                    .padding(Spacing.xs),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -410,19 +412,19 @@ fun ReviewCardsStep(
                 .fillMaxSize()
                 .padding(padding)
                 .systemBarsPadding()
-                .padding(horizontal = 24.dp, vertical = 16.dp),
+                .padding(horizontal = Spacing.xl, vertical = Spacing.lg),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(bottom = 24.dp)
         ) {
             item {
                 Column {
                     Text("Deck Name", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(Spacing.sm))
                     OutlinedTextField(
                         value = deckName,
                         onValueChange = onDeckNameChange,
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(BorderRadius.md),
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color.White,
                             unfocusedContainerColor = Color.White,
@@ -437,12 +439,12 @@ fun ReviewCardsStep(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = PastelBlue),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(BorderRadius.md)
                 ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp),
+                            .padding(Spacing.lg),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
@@ -478,16 +480,16 @@ fun ReviewCardsStep(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
                     elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(BorderRadius.md)
                 ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
+                    Column(modifier = Modifier.padding(Spacing.md)) {
                         Text(
                             "Q: ${card.question}",
                             fontWeight = FontWeight.Bold,
                             fontSize = 12.sp,
                             color = TextDark
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(Spacing.sm))
                         Text(
                             "A: ${card.answer}",
                             fontSize = 11.sp,
@@ -516,13 +518,13 @@ fun ReviewCardsStep(
                     enabled = deckName.isNotBlank() && !isLoading,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 24.dp)
+                        .padding(vertical = Spacing.xl)
                         .height(56.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = AccentPink,
                         disabledContainerColor = Color.LightGray
                     ),
-                    shape = RoundedCornerShape(28.dp)
+                    shape = RoundedCornerShape(BorderRadius.full)
                 ) {
                     if (isLoading) {
                         CircularProgressIndicator(
@@ -530,7 +532,7 @@ fun ReviewCardsStep(
                             color = TextDark,
                             strokeWidth = 2.dp
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(Spacing.sm))
                         Text("Creating...", color = TextDark, fontWeight = FontWeight.Bold)
                     } else {
                         Text(
@@ -552,7 +554,7 @@ fun UploadZone(selectedFileName: String?, onBrowseClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .height(200.dp)
-            .border(2.dp, AccentBlue.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
+            .border(2.dp, AccentBlue.copy(alpha = 0.5f), RoundedCornerShape(BorderRadius.lg))
             .background(Color.White),
         contentAlignment = Alignment.Center
     ) {
@@ -581,13 +583,13 @@ fun UploadZone(selectedFileName: String?, onBrowseClick: () -> Unit) {
                 textAlign = TextAlign.Center,
                 color = TextGray,
                 fontSize = 14.sp,
-                modifier = Modifier.padding(horizontal = 16.dp)
+                modifier = Modifier.padding(horizontal = Spacing.lg)
             )
             Spacer(modifier = Modifier.height(16.dp))
             Button(
                 onClick = onBrowseClick,
                 colors = ButtonDefaults.buttonColors(containerColor = AccentPink),
-                shape = RoundedCornerShape(20.dp),
+                shape = RoundedCornerShape(BorderRadius.lg),
                 contentPadding = PaddingValues(horizontal = 24.dp)
             ) {
                 Text(
@@ -610,9 +612,9 @@ fun FormattingGuide() {
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = Color(0xFFFFFBF0)),
             border = androidx.compose.foundation.BorderStroke(1.dp, AccentYellow),
-            shape = RoundedCornerShape(12.dp)
+            shape = RoundedCornerShape(BorderRadius.md)
         ) {
-            Row(modifier = Modifier.padding(16.dp)) {
+            Row(modifier = Modifier.padding(Spacing.lg)) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text("NotebookLM CSV Format", fontWeight = FontWeight.Bold)
                     Text(
@@ -623,7 +625,7 @@ fun FormattingGuide() {
                     Spacer(modifier = Modifier.height(12.dp))
                     OutlinedButton(
                         onClick = { },
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(BorderRadius.sm),
                         contentPadding = PaddingValues(horizontal = 12.dp)
                     ) {
                         Text("View Example", fontSize = 12.sp, color = TextDark)
@@ -632,9 +634,9 @@ fun FormattingGuide() {
                 Box(
                     modifier = Modifier
                         .size(80.dp)
-                        .clip(RoundedCornerShape(8.dp))
+                        .clip(RoundedCornerShape(BorderRadius.sm))
                         .background(Color.White)
-                        .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp))
+                        .border(1.dp, Color.LightGray, RoundedCornerShape(BorderRadius.sm))
                 )
             }
         }
@@ -657,7 +659,7 @@ fun RecentImportsSection(recentFiles: List<Pair<String, String>>) {
         Spacer(modifier = Modifier.height(12.dp))
         recentFiles.forEach { (name, info) ->
             RecentFileItem(name, info)
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(Spacing.sm))
         }
     }
 }
@@ -667,16 +669,16 @@ fun RecentFileItem(name: String, info: String) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F9FA)),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(BorderRadius.md)
     ) {
         Row(
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier.padding(Spacing.md),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
                     .size(40.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(RoundedCornerShape(BorderRadius.sm))
                     .background(if (name.contains("Informatica")) PastelPink else if (name.contains("Spanish")) PastelYellow else PastelBlue),
                 contentAlignment = Alignment.Center
             ) {
@@ -705,3 +707,4 @@ fun ImportPreview() {
         )
     }
 }
+
