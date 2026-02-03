@@ -58,25 +58,57 @@ fun ImportScreen(
     var parsedFlashcards by remember { mutableStateOf<List<Flashcard>>(emptyList()) }
     var errorMessage by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
+    var importedCount by remember { mutableStateOf(0) }
 
     val context = LocalContext.current
     val csvParser = CSVParser(context)
     val dataManager = DataManager(context)
+
+    // Constantes de validación
+    val MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024 // 5 MB
+    val MAX_IMPORTS = 10
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
             selectedFileUri = it
-            // Validar que sea CSV
             val fileName = it.lastPathSegment ?: ""
-            if (fileName.endsWith(".csv", ignoreCase = true)) {
+
+            // Validar que sea CSV
+            if (!fileName.endsWith(".csv", ignoreCase = true)) {
+                errorMessage = "❌ Solo se permiten archivos CSV"
+                selectedFileUri = null
+                return@rememberLauncherForActivityResult
+            }
+
+            // Validar tamaño del archivo
+            try {
+                val fileSize = context.contentResolver.query(it, null, null, null, null)?.use { cursor ->
+                    cursor.moveToFirst()
+                    val sizeIndex = cursor.getColumnIndex(android.provider.OpenableColumns.SIZE)
+                    if (sizeIndex != -1) cursor.getLong(sizeIndex) else 0L
+                } ?: 0L
+
+                if (fileSize > MAX_FILE_SIZE_BYTES) {
+                    errorMessage = "❌ El archivo es demasiado grande (máximo 5 MB)"
+                    selectedFileUri = null
+                    return@rememberLauncherForActivityResult
+                }
+
+                // Validar límite de importaciones
+                if (importedCount >= MAX_IMPORTS) {
+                    errorMessage = "⚠️ Límite de 10 importaciones alcanzado"
+                    selectedFileUri = null
+                    return@rememberLauncherForActivityResult
+                }
+
                 if (deckName.isEmpty()) {
                     deckName = fileName.removeSuffix(".csv")
                 }
                 errorMessage = ""
-            } else {
-                errorMessage = "Por favor selecciona un archivo CSV válido"
+            } catch (e: Exception) {
+                errorMessage = "❌ Error al validar el archivo"
                 selectedFileUri = null
             }
         }
@@ -85,7 +117,7 @@ fun ImportScreen(
     Scaffold(
         bottomBar = {
             if (importStep == ImportStep.SELECT_FILE) {
-                BottomNavigationBar(onLibraryClick = onBack)
+                BottomNavigationBar(onLibraryClick = onBack, currentScreen = "import")
             }
         },
         contentWindowInsets = WindowInsets(0, 0, 0, 0)
@@ -134,11 +166,17 @@ fun ImportScreen(
                             dataManager.saveDeck(deckWithFlashcards)
                             onImportFinalized(deckName, selectedFileUri ?: Uri.EMPTY)
                             onDeckCreated()
+
+                            // Incrementar contador y limpiar
+                            importedCount++
+
+                            // Resetear estado
                             importStep = ImportStep.SELECT_FILE
                             selectedFileUri = null
                             deckName = ""
                             parsedFlashcards = emptyList()
                             isLoading = false
+                            errorMessage = ""
                         },
                         onBack = {
                             importStep = ImportStep.SELECT_FILE
@@ -205,6 +243,28 @@ fun SelectFileStep(
             contentPadding = PaddingValues(bottom = 24.dp)
         ) {
             item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFE3F2FD)),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "📋 Solo archivos CSV | Máximo 5 MB | Límite: 10 importaciones",
+                            fontSize = 12.sp,
+                            color = Color(0xFF1976D2),
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+
+            item {
                 UploadZone(
                     selectedFileName = selectedFileUri?.lastPathSegment,
                     onBrowseClick = onBrowseClick
@@ -233,7 +293,6 @@ fun SelectFileStep(
                 }
             }
 
-            item { BionicReadingToggle() }
             item { FormattingGuide() }
             item { RecentImportsSection(recentImports) }
 
@@ -541,50 +600,6 @@ fun UploadZone(selectedFileName: String?, onBrowseClick: () -> Unit) {
     }
 }
 
-@Composable
-fun BionicReadingToggle() {
-    var isEnabled by remember { mutableStateOf(true) }
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Bionic Reading", fontWeight = FontWeight.Bold)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Surface(
-                        color = PastelBlue,
-                        shape = RoundedCornerShape(4.dp)
-                    ) {
-                        Text(
-                            "BETA",
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = AccentBlue
-                        )
-                    }
-                }
-                Text(
-                    "Improve focus by highlighting the start of each word.",
-                    fontSize = 12.sp,
-                    color = TextGray
-                )
-            }
-            Switch(
-                checked = isEnabled,
-                onCheckedChange = { isEnabled = it },
-                colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = AccentBlue)
-            )
-        }
-    }
-}
 
 @Composable
 fun FormattingGuide() {

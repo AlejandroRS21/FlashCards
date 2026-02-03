@@ -15,6 +15,15 @@ class DataManager(context: Context) {
         context.getSharedPreferences("flashcards_db", Context.MODE_PRIVATE)
     private val gson = Gson()
 
+    // Métodos para preferencias de usuario
+    fun setBionicReadingEnabled(enabled: Boolean) {
+        sharedPreferences.edit().putBoolean("bionic_reading_enabled", enabled).apply()
+    }
+
+    fun isBionicReadingEnabled(): Boolean {
+        return sharedPreferences.getBoolean("bionic_reading_enabled", true)
+    }
+
     fun saveDeck(deck: Deck) {
         val deckWithFlashcards = DeckWithFlashcards(deck, deck.flashcards)
         val json = gson.toJson(deckWithFlashcards)
@@ -50,10 +59,6 @@ class DataManager(context: Context) {
         }
     }
 
-    fun getAllDecksWithFlashcards(): List<DeckWithFlashcards> {
-        val decksList = getAllDecks()
-        return decksList.mapNotNull { getDeck(it.name) }
-    }
 
     private fun updateDecksList(deck: Deck) {
         val currentDecks = getAllDecks().toMutableList()
@@ -79,5 +84,41 @@ class DataManager(context: Context) {
 
     fun updateDeck(deck: Deck) {
         saveDeck(deck)
+    }
+
+    // Métodos para gestionar flashcards
+    fun deleteFlashcard(deckName: String, flashcardId: String) {
+        val deckWithFlashcards = getDeck(deckName)
+        if (deckWithFlashcards != null) {
+            val updatedFlashcards = deckWithFlashcards.flashcards.filter { it.id != flashcardId }
+            val updatedDeck = deckWithFlashcards.deck.copy(
+                flashcards = updatedFlashcards,
+                cardCount = updatedFlashcards.size
+            )
+            saveDeck(DeckWithFlashcards(updatedDeck, updatedFlashcards))
+        }
+    }
+
+    fun addFlashcard(deckName: String, flashcard: Flashcard) {
+        val deckWithFlashcards = getDeck(deckName)
+        if (deckWithFlashcards != null) {
+            val updatedFlashcards = deckWithFlashcards.flashcards + flashcard
+            val updatedDeck = deckWithFlashcards.deck.copy(
+                flashcards = updatedFlashcards,
+                cardCount = updatedFlashcards.size
+            )
+            saveDeck(DeckWithFlashcards(updatedDeck, updatedFlashcards))
+        }
+    }
+
+    fun updateFlashcard(deckName: String, flashcardId: String, updatedFlashcard: Flashcard) {
+        val deckWithFlashcards = getDeck(deckName)
+        if (deckWithFlashcards != null) {
+            val updatedFlashcards = deckWithFlashcards.flashcards.map {
+                if (it.id == flashcardId) updatedFlashcard else it
+            }
+            val updatedDeck = deckWithFlashcards.deck.copy(flashcards = updatedFlashcards)
+            saveDeck(DeckWithFlashcards(updatedDeck, updatedFlashcards))
+        }
     }
 }

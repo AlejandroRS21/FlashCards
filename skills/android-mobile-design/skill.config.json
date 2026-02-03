@@ -1,0 +1,82 @@
+{
+  "skill": {
+    "id": "android-mobile-design",
+    "name": "Android Mobile Design",
+    "version": "1.0.0",
+    "author": "MCPMarket",
+    "license": "MIT",
+    "category": "Mobile Design & UI/UX",
+    "platform": ["Android", "Jetpack Compose"],
+    "description": "Sistema completo de patrones, componentes y guías de diseño para aplicaciones Android con Jetpack Compose",
+    "status": "active"
+  },
+  "documentation": {
+    "entryPoint": "docs/README.md",
+    "structure": {
+      "docs": "Documentación completa",
+      "components": "Componentes reutilizables",
+      "patterns": "Patrones de diseño",
+      "examples": "Ejemplos de código"
+    }
+  },
+  "designSystem": {
+    "spacing": {
+      "xs": "4dp",
+      "sm": "8dp",
+      "md": "12dp",
+      "lg": "16dp",
+      "xl": "24dp",
+      "xxl": "32dp"
+    },
+    "colors": {
+      "primary": "#7C63D8",
+      "secondary": "#FF8ECD",
+      "tertiary": "#7CEFFF",
+      "background": "#FFFFFF",
+      "surface": "#F5F5F5",
+      "error": "#FF6B6B"
+    },
+    "borderRadius": {
+      "none": "0dp",
+      "xs": "4dp",
+      "sm": "8dp",
+      "md": "12dp",
+      "lg": "16dp",
+      "full": "999dp"
+    }
+  },
+  "components": [
+    "DesignSystemButton",
+    "DesignSystemCard",
+    "DesignSystemListItem",
+    "DesignSystemDivider",
+    "DesignSystemTextField",
+    "DesignSystemTopAppBar",
+    "DesignSystemBottomNavigation",
+    "DesignSystemDialog",
+    "DesignSystemBottomSheet"
+  ],
+  "integrationPoints": {
+    "project": "FlashCards",
+    "screens": [
+      "DashboardScreen",
+      "StudySessionScreen",
+      "ImportScreen",
+      "SettingsScreen"
+    ],
+    "implementation": "app/src/main/java/com/ramsalapps/flashcards/ui/"
+  },
+  "files": {
+    "docs/ANDROID_MOBILE_DESIGN_SKILL.md": "Documentación completa del sistema de diseño",
+    "docs/FLASHCARDS_IMPLEMENTATION.md": "Guía de implementación específica para FlashCards",
+    "docs/SKILL_QUICK_REFERENCE.md": "Referencia rápida para desarrolladores",
+    "docs/INDEX_SKILL_FILES.md": "Índice de archivos de skill",
+    "docs/VALIDATION_CHECKLIST.md": "Checklist de validación de implementación"
+  },
+  "metadata": {
+    "createdAt": "2024-01-15",
+    "updatedAt": "2026-02-03",
+    "maintainer": "FlashCards Team",
+    "projectPath": "c:\\Users\\arami\\AndroidStudioProjects\\FlashCards"
+  }
+}

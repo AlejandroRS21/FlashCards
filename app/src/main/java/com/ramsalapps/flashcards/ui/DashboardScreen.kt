@@ -11,12 +11,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.CloudUpload
+import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,7 +36,9 @@ import com.ramsalapps.flashcards.ui.theme.*
 fun DashboardScreen(
     onStartReview: () -> Unit,
     onImportClick: () -> Unit,
+    onSettingsClick: () -> Unit = {},
     onDeckClick: (Deck) -> Unit = {},
+    onDeckDelete: (String) -> Unit = {},
     decks: List<Deck> = emptyList(),
     recentSessions: List<Session> = emptyList(),
     streakDays: String = "0",
@@ -43,7 +47,7 @@ fun DashboardScreen(
     userName: String = ""
 ) {
     Scaffold(
-        bottomBar = { BottomNavigationBar(onLibraryClick = onImportClick) }
+        bottomBar = { BottomNavigationBar(onLibraryClick = onImportClick, onSettingsClick = onSettingsClick, currentScreen = "home") }
     ) { padding ->
         LazyColumn(
             modifier = Modifier
@@ -65,7 +69,7 @@ fun DashboardScreen(
                     contentPadding = PaddingValues(vertical = 8.dp)
                 ) {
                     items(decks) { deck ->
-                        DeckCard(deck, onClick = { onDeckClick(deck) })
+                        DeckCard(deck, onClick = { onDeckClick(deck) }, onDelete = { onDeckDelete(it) })
                     }
                 }
             }
@@ -185,7 +189,9 @@ fun SectionHeader(title: String, action: String?) {
 }
 
 @Composable
-fun DeckCard(deck: Deck, onClick: () -> Unit = {}) {
+fun DeckCard(deck: Deck, onClick: () -> Unit = {}, onDelete: (String) -> Unit = {}) {
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
     Card(
         modifier = Modifier
             .width(160.dp)
@@ -195,15 +201,41 @@ fun DeckCard(deck: Deck, onClick: () -> Unit = {}) {
         shape = RoundedCornerShape(16.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(if (deck.name.contains("Medical")) PastelGreen else PastelPurple),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(deck.icon, fontSize = 16.sp)
+                }
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = "Delete",
+                    tint = Color(0xFFFF6B6B),
+                    modifier = Modifier
+                        .size(20.dp)
+                        .clickable { showDeleteDialog = true }
+                )
+            }
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(100.dp)
-                    .clip(RoundedCornerShape(12.dp))
+                    .height(60.dp)
+                    .clip(RoundedCornerShape(8.dp))
                     .background(if (deck.name.contains("Medical")) PastelGreen else PastelPurple),
                 contentAlignment = Alignment.Center
             ) {
-                Text(deck.icon, fontSize = 40.sp)
+                Text(deck.icon, fontSize = 28.sp)
             }
             Spacer(modifier = Modifier.height(12.dp))
             Text(
@@ -216,6 +248,30 @@ fun DeckCard(deck: Deck, onClick: () -> Unit = {}) {
             )
             Text("${deck.cardCount} cards • ${deck.progress}%", fontSize = 12.sp, color = TextGray, maxLines = 1)
         }
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Delete Deck?") },
+            text = { Text("Are you sure you want to delete \"${deck.name}\"? This action cannot be undone.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onDelete(deck.name)
+                        showDeleteDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF6B6B))
+                ) {
+                    Text("Delete", color = Color.White)
+                }
+            },
+            dismissButton = {
+                Button(onClick = { showDeleteDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
 
@@ -251,31 +307,63 @@ fun SessionItem(session: Session) {
 }
 
 @Composable
-fun BottomNavigationBar(onLibraryClick: () -> Unit) {
+fun BottomNavigationBar(
+    onLibraryClick: () -> Unit,
+    onSettingsClick: () -> Unit = {},
+    currentScreen: String = "home"
+) {
     NavigationBar(containerColor = Color.White) {
+        // Home
         NavigationBarItem(
-            icon = { Icon(Icons.Default.Home, null) },
+            icon = {
+                Icon(
+                    Icons.Default.Home,
+                    null,
+                    tint = if (currentScreen == "home") AccentBlue else TextGray
+                )
+            },
             label = { Text("Home") },
-            selected = true,
+            selected = currentScreen == "home",
             onClick = {}
         )
+        // Import
         NavigationBarItem(
-            icon = { Icon(Icons.AutoMirrored.Filled.List, null) },
-            label = { Text("Library") },
-            selected = false,
+            icon = {
+                Icon(
+                    Icons.Default.CloudUpload,
+                    null,
+                    tint = if (currentScreen == "import") AccentBlue else TextGray
+                )
+            },
+            label = { Text("Import") },
+            selected = currentScreen == "import",
             onClick = onLibraryClick
         )
+        // Stats
         NavigationBarItem(
-            icon = { Icon(Icons.Default.Info, null) },
+            icon = {
+                Icon(
+                    Icons.Default.BarChart,
+                    null,
+                    tint = if (currentScreen == "stats") AccentBlue else TextGray
+                )
+            },
             label = { Text("Stats") },
-            selected = false,
+            selected = currentScreen == "stats",
             onClick = {}
         )
+        // Settings
         NavigationBarItem(
-            icon = { Icon(Icons.Default.Settings, null) },
+            icon = {
+                Icon(
+                    Icons.Default.Settings,
+                    null,
+                    tint = if (currentScreen == "settings") AccentBlue else TextGray
+                )
+            },
             label = { Text("Settings") },
-            selected = false,
-            onClick = {}
+            selected = currentScreen == "settings",
+            onClick = { onSettingsClick() }
         )
     }
 }

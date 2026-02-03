@@ -1,15 +1,144 @@
+# ==================== ANDROID STUDIO / IntelliJ IDEA ====================
 *.iml
-.gradle
+.idea/
+.idea/caches/
+.idea/libraries/
+.idea/modules.xml
+.idea/workspace.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml
+.idea/jarRepositories.xml
+.idea/dictionaries/
+.idea/inspectionProfiles/
+.idea/misc.xml
+.idea/.name
+.idea/sonarlint/
+.idea/vcs.xml
+*.swp
+*.swo
+*~
+
+# ==================== GRADLE ====================
+.gradle/
+gradle-wrapper.jar
+.gradle/
+**/build/
+**/bin/
+
+# ==================== ANDROID ====================
 /local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
+/build/
+/captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.ap_
+*.aab
+*.aar
+*.dex
+*.o
+*.so
+*.a
+*.lib
+
+# ==================== ANDROID STUDIO / CUSTOM ====================
+gradlew.bat
+gradlew
+.project
+.classpath
+.c9/
+
+# ==================== ANDROID NDK ====================
+.ndk-bundle/
+ndk/
+
+# ==================== BUILD OUTPUT ====================
+/app/build/
+/build/
+/out/
+*.class
+*.jar
+*.war
+*.ear
+
+# ==================== KOTLIN ====================
+*.kt.bak
+out/
+
+# ==================== OS FILES ====================
 .DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+.AppleDouble
+.LSOverride
+.Icon
+*.swp
+*.swo
+*~
+
+# ==================== BACKUP & TEMP FILES ====================
+*.bak
+*.tmp
+*.temp
+*~
+.#*
+*.orig
+
+# ==================== EDITOR CONFIG ====================
+.vscode/
+.vscode/launch.json
+.vscode/settings.json
+.vscode/extensions.json
+*.sublime-workspace
+.sublime-project
+.sublime-workspace
+.eclipse
+.settings/
+bin/
+.project
+
+# ==================== ENVIRONMENT & LOCAL ====================
 local.properties
+gradle.properties
+build.gradle.kts.bak
+*.properties.local
+.env
+.env.local
+
+# ==================== JVM / DEBUGGING ====================
+*.jks
+*.keystore
+.jdebug.log
+.jvm-opts
+
+# ==================== JAVA ====================
+.classpath
+.project
+.settings/
+bin/
+
+# ==================== LINT ====================
+lint-results*.xml
+
+# ==================== CRASH REPORTS ====================
+crash_reports/
+crashes/
+
+# ==================== PROJECT SPECIFIC ====================
+# Keep documentation in skills/ directory
+# But ignore any build outputs within it
+skills/**/build/
+skills/**/.gradle/
+
+# ==================== LOGS ====================
+*.log
+logs/
+output.log
+
+# ==================== MISC ====================
+.idea_modules/
+.factorypath

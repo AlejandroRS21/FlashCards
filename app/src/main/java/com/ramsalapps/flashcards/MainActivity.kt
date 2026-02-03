@@ -6,7 +6,9 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.*
 import com.ramsalapps.flashcards.ui.DashboardScreen
+import com.ramsalapps.flashcards.ui.DeckEditScreen
 import com.ramsalapps.flashcards.ui.ImportScreen
+import com.ramsalapps.flashcards.ui.SettingsScreen
 import com.ramsalapps.flashcards.ui.StudySessionScreen
 import com.ramsalapps.flashcards.ui.theme.FlashCardsTheme
 
@@ -30,9 +32,15 @@ class MainActivity : ComponentActivity() {
                     Screen.Dashboard -> DashboardScreen(
                         onStartReview = { currentScreen = Screen.Study },
                         onImportClick = { currentScreen = Screen.Import },
+                        onSettingsClick = { currentScreen = Screen.Settings },
                         onDeckClick = { deck ->
                             selectedDeck = deck
                             currentScreen = Screen.Study
+                        },
+                        onDeckDelete = { deckName ->
+                            val dataManager = DataManager(this@MainActivity)
+                            dataManager.deleteDeck(deckName)
+                            decks = dataManager.getAllDecks()
                         },
                         decks = decks
                     )
@@ -62,6 +70,19 @@ class MainActivity : ComponentActivity() {
                             decks = dataManager.getAllDecks()
                         }
                     )
+                    Screen.Settings -> SettingsScreen(
+                        onBack = { currentScreen = Screen.Dashboard }
+                    )
+                    Screen.DeckEdit -> DeckEditScreen(
+                        deck = selectedDeck ?: Deck(id = "", name = "Untitled", cardCount = 0, progress = 0),
+                        onBack = { currentScreen = Screen.Dashboard },
+                        onDeckUpdate = { updatedDeck ->
+                            val dataManager = DataManager(this@MainActivity)
+                            dataManager.updateDeck(updatedDeck)
+                            decks = dataManager.getAllDecks()
+                            selectedDeck = updatedDeck
+                        }
+                    )
                 }
             }
         }
@@ -69,5 +90,5 @@ class MainActivity : ComponentActivity() {
 }
 
 enum class Screen {
-    Dashboard, Study, Import
+    Dashboard, Study, Import, Settings, DeckEdit
 }

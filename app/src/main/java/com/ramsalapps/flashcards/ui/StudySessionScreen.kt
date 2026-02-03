@@ -12,9 +12,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Casino
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -23,11 +25,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.TextUnit
+import com.ramsalapps.flashcards.DataManager
 import com.ramsalapps.flashcards.Deck
 import com.ramsalapps.flashcards.ui.theme.*
 import kotlinx.coroutines.launch
@@ -40,13 +45,18 @@ fun StudySessionScreen(
     totalCards: Int = 1,
     onDeckUpdate: (Deck) -> Unit = {}
 ) {
-    val flashcards = deck?.flashcards ?: emptyList()
-    val hasFlashcards = flashcards.isNotEmpty()
+    val context = LocalContext.current
+    val dataManager = DataManager(context)
+
+    val originalFlashcards = deck?.flashcards ?: emptyList()
+    val hasFlashcards = originalFlashcards.isNotEmpty()
 
     var currentIndex by remember { mutableStateOf(0) }
     var isFlipped by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
     var editedDeckName by remember { mutableStateOf(deck?.name ?: "") }
+    var flashcards by remember { mutableStateOf(originalFlashcards) }
+    var bionicReadingEnabled by remember { mutableStateOf(dataManager.isBionicReadingEnabled()) }
 
     val currentCard = if (hasFlashcards && currentIndex < flashcards.size) flashcards[currentIndex] else null
     val displayTotal = if (hasFlashcards) flashcards.size else totalCards
@@ -68,6 +78,17 @@ fun StudySessionScreen(
         Color(0xFFFFE4B5)  // Moccasin
     )
 
+    fun shuffleCards() {
+        flashcards = flashcards.shuffled()
+        currentIndex = 0
+        isFlipped = false
+    }
+
+    fun resetToOriginal() {
+        flashcards = originalFlashcards
+        currentIndex = 0
+        isFlipped = false
+    }
 
     suspend fun animateSwipeNext() {
         // Swipe para siguiente: se desliza a la izquierda (offset negativo)
@@ -139,7 +160,7 @@ fun StudySessionScreen(
                         .clickable { showEditDialog = true }
                 )
             }
-            Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Stats", tint = TextDark)
+            Icon(Icons.Default.Info, contentDescription = "Stats", tint = TextDark)
         }
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -245,20 +266,40 @@ fun StudySessionScreen(
                                 contentAlignment = Alignment.Center
                             ) {
                                 if (flipRotation <= 90f) {
-                                    BionicText(
-                                        text = card.question,
-                                        fontSize = 28.sp,
-                                        color = TextDark,
-                                        modifier = Modifier.fillMaxWidth()
-                                    )
+                                    if (bionicReadingEnabled) {
+                                        BionicText(
+                                            text = card.question,
+                                            fontSize = calculateFontSizeForQuestion(card.question),
+                                            color = TextDark,
+                                            modifier = Modifier.fillMaxWidth()
+                                        )
+                                    } else {
+                                        Text(
+                                            text = card.question,
+                                            fontSize = calculateFontSizeForQuestion(card.question),
+                                            color = TextDark,
+                                            textAlign = TextAlign.Center,
+                                            lineHeight = 32.sp
+                                        )
+                                    }
                                 } else {
-                                    Text(
-                                        text = card.answer,
-                                        fontSize = 22.sp,
-                                        color = TextDark,
-                                        textAlign = TextAlign.Center,
-                                        lineHeight = 32.sp
-                                    )
+                                    if (bionicReadingEnabled) {
+                                        BionicText(
+                                            text = card.answer,
+                                            fontSize = calculateFontSizeForAnswer(card.answer),
+                                            color = TextDark,
+                                            modifier = Modifier.fillMaxWidth(),
+                                            textAlign = if (card.answer.split(" ").size < 3) TextAlign.Center else TextAlign.Center
+                                        )
+                                    } else {
+                                        Text(
+                                            text = card.answer,
+                                            fontSize = calculateFontSizeForAnswer(card.answer),
+                                            color = TextDark,
+                                            textAlign = if (card.answer.split(" ").size < 3) TextAlign.Center else TextAlign.Center,
+                                            lineHeight = 32.sp
+                                        )
+                                    }
                                 }
                             }
                         } else {
@@ -268,12 +309,22 @@ fun StudySessionScreen(
                                     .padding(32.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                BionicText(
-                                    text = card.question,
-                                    fontSize = 22.sp,
-                                    color = TextDark.copy(alpha = 0.7f),
-                                    modifier = Modifier.fillMaxWidth()
-                                )
+                                if (bionicReadingEnabled) {
+                                    BionicText(
+                                        text = card.question,
+                                        fontSize = (calculateFontSizeForQuestion(card.question).value * 0.75).sp,
+                                        color = TextDark.copy(alpha = 0.7f),
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                } else {
+                                    Text(
+                                        text = card.question,
+                                        fontSize = (calculateFontSizeForQuestion(card.question).value * 0.75).sp,
+                                        color = TextDark.copy(alpha = 0.7f),
+                                        textAlign = TextAlign.Center,
+                                        lineHeight = 28.sp
+                                    )
+                                }
                             }
                         }
                     }
@@ -336,6 +387,43 @@ fun StudySessionScreen(
                     Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Next")
                 }
             }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Button(
+                    onClick = { shuffleCards() },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(52.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFFF6B9D)  // Rosa vibrante
+                    ),
+                    shape = RoundedCornerShape(14.dp)
+                ) {
+                    Icon(Icons.Default.Casino, contentDescription = "Shuffle", tint = Color.White)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Shuffle", fontWeight = FontWeight.Bold, color = Color.White)
+                }
+
+                Button(
+                    onClick = { resetToOriginal() },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(52.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFFFA500)  // Naranja vibrante
+                    ),
+                    shape = RoundedCornerShape(14.dp)
+                ) {
+                    Icon(Icons.Default.Refresh, contentDescription = "Reset", tint = Color.White)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Reset", fontWeight = FontWeight.Bold, color = Color.White)
+                }
+            }
         }
     }
 
@@ -371,6 +459,28 @@ fun StudySessionScreen(
                 }
             }
         )
+    }
+}
+
+// Función auxiliar para calcular tamaño dinámico de fuente
+fun calculateFontSizeForQuestion(text: String): TextUnit {
+    return when {
+        text.length > 200 -> 16.sp   // Texto muy largo
+        text.length > 150 -> 18.sp   // Texto largo
+        text.length > 100 -> 22.sp   // Texto medio-largo
+        text.length > 60 -> 26.sp    // Texto medio
+        else -> 28.sp                 // Texto corto
+    }
+}
+
+// Función auxiliar para calcular tamaño dinámico de fuente para respuestas
+fun calculateFontSizeForAnswer(text: String): TextUnit {
+    return when {
+        text.length > 200 -> 14.sp   // Texto muy largo
+        text.length > 150 -> 16.sp   // Texto largo
+        text.length > 100 -> 18.sp   // Texto medio-largo
+        text.length > 60 -> 20.sp    // Texto medio
+        else -> 22.sp                 // Texto corto
     }
 }
 

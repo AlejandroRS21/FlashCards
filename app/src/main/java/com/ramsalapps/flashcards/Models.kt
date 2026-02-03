@@ -1,14 +1,13 @@
 package com.ramsalapps.flashcards
 
-import android.net.Uri
-
 data class Deck(
     val id: String = "",
     val name: String,
     val cardCount: Int,
     val progress: Int,
-    val icon: String = "📚", // Simplified for this example
-    val flashcards: List<Flashcard> = emptyList()
+    val icon: String = "📚",
+    val flashcards: List<Flashcard> = emptyList(),
+    val createdDate: Long = System.currentTimeMillis()
 )
 
 data class Session(
@@ -20,18 +19,10 @@ data class Session(
 )
 
 data class Flashcard(
+    val id: String = java.util.UUID.randomUUID().toString(),
     val question: String,
     val answer: String,
     val category: String
 )
 
-// Clase para representar el estado de importación temporal
-data class ImportState(
-    val fileUri: Uri? = null,
-    val fileName: String = "",
-    val deckName: String = "",
-    val flashcards: List<Flashcard> = emptyList(),
-    val isLoading: Boolean = false,
-    val error: String? = null
-)
 
