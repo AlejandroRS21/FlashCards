@@ -37,6 +37,10 @@ class MainActivity : ComponentActivity() {
                             selectedDeck = deck
                             currentScreen = Screen.Study
                         },
+                        onDeckEdit = { deck ->
+                            selectedDeck = deck
+                            currentScreen = Screen.DeckEdit
+                        },
                         onDeckDelete = { deckName ->
                             val dataManager = DataManager(this@MainActivity)
                             dataManager.deleteDeck(deckName)

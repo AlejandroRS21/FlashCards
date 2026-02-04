@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -46,6 +47,7 @@ fun DashboardScreen(
     onImportClick: () -> Unit,
     onSettingsClick: () -> Unit = {},
     onDeckClick: (Deck) -> Unit = {},
+    onDeckEdit: (Deck) -> Unit = {},
     onDeckDelete: (String) -> Unit = {},
     decks: List<Deck> = emptyList(),
     recentSessions: List<Session> = emptyList(),
@@ -90,6 +92,7 @@ fun DashboardScreen(
                                 DeckCard(
                                     deck,
                                     onClick = { onDeckClick(deck) },
+                                    onEdit = { onDeckEdit(deck) },
                                     onDelete = { onDeckDelete(it) },
                                     modifier = Modifier.width(160.dp)
                                 )
@@ -109,6 +112,7 @@ fun DashboardScreen(
                                 DeckCard(
                                     decks[index],
                                     onClick = { onDeckClick(decks[index]) },
+                                    onEdit = { onDeckEdit(decks[index]) },
                                     onDelete = { onDeckDelete(it) },
                                     modifier = Modifier.fillMaxWidth()
                                 )
@@ -236,6 +240,7 @@ fun SectionHeader(title: String, action: String?) {
 fun DeckCard(
     deck: Deck,
     onClick: () -> Unit = {},
+    onEdit: () -> Unit = {},
     onDelete: (String) -> Unit = {},
     modifier: Modifier = Modifier.width(160.dp)
 ) {
@@ -265,14 +270,27 @@ fun DeckCard(
                 ) {
                     Text(deck.icon, fontSize = 16.sp)
                 }
-                Icon(
-                    Icons.Default.Delete,
-                    contentDescription = "Delete",
-                    tint = Color(0xFFFF6B6B),
-                    modifier = Modifier
-                        .size(20.dp)
-                        .clickable { showDeleteDialog = true }
-                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Default.Edit,
+                        contentDescription = "Edit",
+                        tint = AccentBlue,
+                        modifier = Modifier
+                            .size(20.dp)
+                            .clickable { onEdit() }
+                    )
+                    Icon(
+                        Icons.Default.Delete,
+                        contentDescription = "Delete",
+                        tint = Color(0xFFFF6B6B),
+                        modifier = Modifier
+                            .size(20.dp)
+                            .clickable { showDeleteDialog = true }
+                    )
+                }
             }
 
             Box(
