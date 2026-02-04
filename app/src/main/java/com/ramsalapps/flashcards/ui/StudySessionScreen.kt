@@ -471,13 +471,24 @@ fun calculateFontSizeForAnswer(text: String): TextUnit {
     }
 }
 
-@Preview(showBackground = true)
+@Preview(name = "Mobile", widthDp = 360, heightDp = 800, showBackground = true)
 @Composable
-fun StudySessionPreview() {
+fun StudySessionPreviewMobile() {
     FlashCardsTheme {
         StudySessionScreen(
             onClose = {},
             totalCards = 50
+        )
+    }
+}
+
+@Preview(name = "Tablet", widthDp = 600, heightDp = 800, showBackground = true)
+@Composable
+fun StudySessionPreviewTablet() {
+    FlashCardsTheme {
+        StudySessionScreen(
+            onClose = {},
+            totalCards = 75
         )
     }
 }

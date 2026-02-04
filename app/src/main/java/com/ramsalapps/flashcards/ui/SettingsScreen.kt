@@ -20,10 +20,12 @@ import com.ramsalapps.flashcards.ui.theme.*
 import com.ramsalapps.flashcards.ui.theme.Spacing
 import com.ramsalapps.flashcards.ui.theme.BorderRadius
 import com.ramsalapps.flashcards.designsystem.components.DesignSystemCard
+import com.ramsalapps.flashcards.ui.components.AppNavigationBar
 
 @Composable
 fun SettingsScreen(
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onImportClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val dataManager = DataManager(context)
@@ -32,34 +34,41 @@ fun SettingsScreen(
         mutableStateOf(dataManager.isBionicReadingEnabled())
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(PastelPurple)
-            .systemBarsPadding()
-            .padding(Spacing.xl)
-    ) {
-        // Header
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                Icons.Default.Close,
-                contentDescription = "Close",
-                tint = TextDark,
-                modifier = Modifier.clickable { onBack() }
-            )
-            Text(
-                "Settings",
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp
-            )
-            Spacer(modifier = Modifier.width(24.dp))
+    Scaffold(
+        contentWindowInsets = WindowInsets.systemBars,
+        bottomBar = {
+            AppNavigationBar(currentScreen = "settings", onImportClick = onImportClick, onSettingsClick = onBack)
         }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(PastelPurple)
+                .padding(padding)
+                .consumeWindowInsets(padding)
+                .padding(Spacing.xl)
+        ) {
+            // Header
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Default.Close,
+                    contentDescription = "Close",
+                    tint = TextDark,
+                    modifier = Modifier.clickable { onBack() }
+                )
+                Text(
+                    "Settings",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp
+                )
+                Spacer(modifier = Modifier.width(24.dp))
+            }
 
-        Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
         // Bionic Reading Setting
         Card(
@@ -139,6 +148,7 @@ fun SettingsScreen(
                     lineHeight = 18.sp
                 )
             }
+        }
         }
     }
 }

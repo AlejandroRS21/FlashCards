@@ -75,7 +75,8 @@ class MainActivity : ComponentActivity() {
                         }
                     )
                     Screen.Settings -> SettingsScreen(
-                        onBack = { currentScreen = Screen.Dashboard }
+                        onBack = { currentScreen = Screen.Dashboard },
+                        onImportClick = { currentScreen = Screen.Import }
                     )
                     Screen.DeckEdit -> DeckEditScreen(
                         deck = selectedDeck ?: Deck(id = "", name = "Untitled", cardCount = 0, progress = 0),

@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ramsalapps.flashcards.Deck
 import com.ramsalapps.flashcards.Session
+import com.ramsalapps.flashcards.ui.components.AppNavigationBar
 import com.ramsalapps.flashcards.ui.theme.*
 import com.ramsalapps.flashcards.ui.theme.Spacing
 import com.ramsalapps.flashcards.ui.theme.BorderRadius
@@ -57,13 +58,23 @@ fun DashboardScreen(
     userName: String = ""
 ) {
     Scaffold(
-        bottomBar = { BottomNavigationBar(onLibraryClick = onImportClick, onSettingsClick = onSettingsClick, currentScreen = "home") }
+        contentWindowInsets = WindowInsets.systemBars,
+        bottomBar = { 
+            AppNavigationBar(
+                currentScreen = "home",
+                onImportClick = onImportClick,
+                onSettingsClick = onSettingsClick
+            )
+        }
     ) { padding ->
         BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .consumeWindowInsets(padding)
         ) {
+            @Suppress("UNUSED_VARIABLE")
+            val scope = this
             val responsivePadding = getResponsivePadding(maxWidth)
             val deviceType = getDeviceType(maxWidth)
             
@@ -372,68 +383,6 @@ fun SessionItem(session: Session) {
     }
 }
 
-@Composable
-fun BottomNavigationBar(
-    onLibraryClick: () -> Unit,
-    onSettingsClick: () -> Unit = {},
-    currentScreen: String = "home"
-) {
-    NavigationBar(containerColor = Color.White) {
-        // Home
-        NavigationBarItem(
-            icon = {
-                Icon(
-                    Icons.Default.Home,
-                    null,
-                    tint = if (currentScreen == "home") AccentBlue else TextGray
-                )
-            },
-            label = { Text("Home") },
-            selected = currentScreen == "home",
-            onClick = {}
-        )
-        // Import
-        NavigationBarItem(
-            icon = {
-                Icon(
-                    Icons.Default.CloudUpload,
-                    null,
-                    tint = if (currentScreen == "import") AccentBlue else TextGray
-                )
-            },
-            label = { Text("Import") },
-            selected = currentScreen == "import",
-            onClick = onLibraryClick
-        )
-        // Stats
-        NavigationBarItem(
-            icon = {
-                Icon(
-                    Icons.Default.BarChart,
-                    null,
-                    tint = if (currentScreen == "stats") AccentBlue else TextGray
-                )
-            },
-            label = { Text("Stats") },
-            selected = currentScreen == "stats",
-            onClick = {}
-        )
-        // Settings
-        NavigationBarItem(
-            icon = {
-                Icon(
-                    Icons.Default.Settings,
-                    null,
-                    tint = if (currentScreen == "settings") AccentBlue else TextGray
-                )
-            },
-            label = { Text("Settings") },
-            selected = currentScreen == "settings",
-            onClick = { onSettingsClick() }
-        )
-    }
-}
-
 // Preview responsivos para diferentes tamaños de pantalla
 @Preview(name = "Mobile", widthDp = 360, heightDp = 800)
 @Composable
@@ -442,6 +391,7 @@ fun DashboardPreviewMobile() {
         DashboardScreen(
             onStartReview = {},
             onImportClick = {},
+            onSettingsClick = {},
             userName = "Alex",
             streakDays = "7",
             masteredCards = "240",
@@ -459,22 +409,22 @@ fun DashboardPreviewMobile() {
     }
 }
 
-@Preview(name = "Tablet", widthDp = 600, heightDp = 1000)
+@Preview(name = "Tablet", widthDp = 600, heightDp = 800)
 @Composable
 fun DashboardPreviewTablet() {
     FlashCardsTheme {
         DashboardScreen(
             onStartReview = {},
             onImportClick = {},
-            userName = "Alex",
-            streakDays = "7",
-            masteredCards = "240",
-            dailyGoalProgress = 0.75f,
+            onSettingsClick = {},
+            userName = "Jordan",
+            streakDays = "14",
+            masteredCards = "480",
+            dailyGoalProgress = 0.85f,
             decks = listOf(
                 Deck(name = "Medical Terms", cardCount = 120, progress = 80, icon = "🩺"),
                 Deck(name = "Spanish 101", cardCount = 45, progress = 30, icon = "💃"),
-                Deck(name = "History", cardCount = 75, progress = 50, icon = "📜"),
-                Deck(name = "Biology", cardCount = 60, progress = 45, icon = "🧬")
+                Deck(name = "History", cardCount = 75, progress = 50, icon = "📜")
             ),
             recentSessions = listOf(
                 Session("Medical Terms", "Yesterday", "15 mins", 12, "🩺"),
@@ -484,30 +434,4 @@ fun DashboardPreviewTablet() {
     }
 }
 
-@Preview(name = "Desktop", widthDp = 1200, heightDp = 800)
-@Composable
-fun DashboardPreviewDesktop() {
-    FlashCardsTheme {
-        DashboardScreen(
-            onStartReview = {},
-            onImportClick = {},
-            userName = "Alex",
-            streakDays = "7",
-            masteredCards = "240",
-            dailyGoalProgress = 0.75f,
-            decks = listOf(
-                Deck(name = "Medical Terms", cardCount = 120, progress = 80, icon = "🩺"),
-                Deck(name = "Spanish 101", cardCount = 45, progress = 30, icon = "💃"),
-                Deck(name = "History", cardCount = 75, progress = 50, icon = "📜"),
-                Deck(name = "Biology", cardCount = 60, progress = 45, icon = "🧬"),
-                Deck(name = "Chemistry", cardCount = 85, progress = 70, icon = "⚗️"),
-                Deck(name = "Physics", cardCount = 95, progress = 55, icon = "⚛️")
-            ),
-            recentSessions = listOf(
-                Session("Medical Terms", "Yesterday", "15 mins", 12, "🩺"),
-                Session("World History", "2 days ago", "10 mins", 5, "📜")
-            )
-        )
-    }
-}
 

@@ -39,6 +39,7 @@ import com.ramsalapps.flashcards.ui.theme.BorderRadius
 import com.ramsalapps.flashcards.designsystem.components.DesignSystemButton
 import com.ramsalapps.flashcards.designsystem.components.DesignSystemCard
 import com.ramsalapps.flashcards.designsystem.components.ButtonSize
+import com.ramsalapps.flashcards.ui.components.AppNavigationBar
 
 enum class ImportStep {
     SELECT_FILE,
@@ -73,12 +74,25 @@ fun ImportScreen(
     val MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024 // 5 MB
     val MAX_IMPORTS = 10
 
+    // Helper function to get filename without path
+    fun getDisplayName(uri: Uri): String {
+        return try {
+            context.contentResolver.query(uri, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
+                cursor.moveToFirst()
+                val index = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                if (index != -1) cursor.getString(index) else uri.lastPathSegment ?: ""
+            } ?: uri.lastPathSegment ?: ""
+        } catch (e: Exception) {
+            uri.lastPathSegment ?: ""
+        }
+    }
+
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
             selectedFileUri = it
-            val fileName = it.lastPathSegment ?: ""
+            val fileName = getDisplayName(it)
 
             // Validar que sea CSV
             if (!fileName.endsWith(".csv", ignoreCase = true)) {
@@ -120,18 +134,51 @@ fun ImportScreen(
     }
 
     Scaffold(
-        bottomBar = {
-            if (importStep == ImportStep.SELECT_FILE) {
-                BottomNavigationBar(onLibraryClick = onBack, currentScreen = "import")
+        topBar = {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                IconButton(
+                    onClick = { onBack() },
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                        contentDescription = "Back",
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+                Text(
+                    "Import Flashcards",
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(modifier = Modifier.width(40.dp))
             }
         },
-        contentWindowInsets = WindowInsets(0, 0, 0, 0)
+        bottomBar = {
+            if (importStep == ImportStep.SELECT_FILE) {
+                AppNavigationBar(currentScreen = "import", onImportClick = onBack)
+            }
+        },
+        contentWindowInsets = WindowInsets.systemBars
     ) { padding ->
-        Box(modifier = Modifier.padding(padding)) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .consumeWindowInsets(padding)
+        ) {
             when (importStep) {
                 ImportStep.SELECT_FILE -> {
                     SelectFileStep(
                         selectedFileUri = selectedFileUri,
+                        displayFileName = selectedFileUri?.let { getDisplayName(it) },
                         deckName = deckName,
                         errorMessage = errorMessage,
                         onDeckNameChange = { deckName = it },
@@ -198,6 +245,7 @@ fun ImportScreen(
 @Composable
 fun SelectFileStep(
     selectedFileUri: Uri?,
+    displayFileName: String?,
     deckName: String,
     errorMessage: String,
     onDeckNameChange: (String) -> Unit,
@@ -207,46 +255,13 @@ fun SelectFileStep(
     recentImports: List<Pair<String, String>> = emptyList(),
     isLoading: Boolean = false
 ) {
-    Scaffold(
-        topBar = {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(Spacing.xs),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                IconButton(
-                    onClick = { onBack() },
-                    modifier = Modifier.size(40.dp)
-                ) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                        contentDescription = "Back",
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-                Text(
-                    "Import Flashcards",
-                    textAlign = TextAlign.Center,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    modifier = Modifier.weight(1f)
-                )
-                Spacer(modifier = Modifier.width(40.dp))
-            }
-        },
-        contentWindowInsets = WindowInsets(0, 0, 0, 0)
-    ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .systemBarsPadding()
-                .padding(horizontal = Spacing.xl, vertical = Spacing.lg),
-            verticalArrangement = Arrangement.spacedBy(24.dp),
-            contentPadding = PaddingValues(bottom = 24.dp)
-        ) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = Spacing.xl, vertical = Spacing.lg),
+        verticalArrangement = Arrangement.spacedBy(24.dp),
+        contentPadding = PaddingValues(bottom = 24.dp)
+    ) {
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -271,7 +286,7 @@ fun SelectFileStep(
 
             item {
                 UploadZone(
-                    selectedFileName = selectedFileUri?.lastPathSegment,
+                    selectedFileName = displayFileName,
                     onBrowseClick = onBrowseClick
                 )
             }
@@ -346,7 +361,6 @@ fun SelectFileStep(
                 )
             }
         }
-    }
 }
 
 @Composable
@@ -358,46 +372,13 @@ fun ReviewCardsStep(
     onBack: () -> Unit,
     isLoading: Boolean = false
 ) {
-    Scaffold(
-        topBar = {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(Spacing.xs),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                IconButton(
-                    onClick = { onBack() },
-                    modifier = Modifier.size(40.dp)
-                ) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                        contentDescription = "Back",
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-                Text(
-                    "Review & Create",
-                    textAlign = TextAlign.Center,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    modifier = Modifier.weight(1f)
-                )
-                Spacer(modifier = Modifier.width(40.dp))
-            }
-        },
-        contentWindowInsets = WindowInsets(0, 0, 0, 0)
-    ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .systemBarsPadding()
-                .padding(horizontal = Spacing.xl, vertical = Spacing.lg),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(bottom = 24.dp)
-        ) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = Spacing.xl, vertical = Spacing.lg),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        contentPadding = PaddingValues(bottom = 24.dp)
+    ) {
             item {
                 Column {
                     Text("Deck Name", fontWeight = FontWeight.Bold, fontSize = 16.sp)
@@ -506,7 +487,6 @@ fun ReviewCardsStep(
                 )
             }
         }
-    }
 }
 
 @Composable
