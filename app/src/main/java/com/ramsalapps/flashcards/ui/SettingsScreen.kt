@@ -21,6 +21,8 @@ import com.ramsalapps.flashcards.ui.theme.Spacing
 import com.ramsalapps.flashcards.ui.theme.BorderRadius
 import com.ramsalapps.flashcards.designsystem.components.DesignSystemCard
 import com.ramsalapps.flashcards.ui.components.AppNavigationBar
+import androidx.compose.ui.tooling.preview.Preview
+import com.ramsalapps.flashcards.ui.theme.FlashCardsTheme
 
 @Composable
 fun SettingsScreen(
@@ -32,6 +34,10 @@ fun SettingsScreen(
 
     var bionicReadingEnabled by remember {
         mutableStateOf(dataManager.isBionicReadingEnabled())
+    }
+    
+    var soundEffectsEnabled by remember {
+        mutableStateOf(dataManager.isSoundEffectsEnabled())
     }
 
     Scaffold(
@@ -123,6 +129,46 @@ fun SettingsScreen(
             }
         }
 
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Sound Effects Setting
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+            shape = RoundedCornerShape(BorderRadius.md)
+        ) {
+            Row(
+                modifier = Modifier
+                    .padding(Spacing.lg)
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Sound Effects", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        "Play sounds for correct and incorrect answers.",
+                        fontSize = 12.sp,
+                        color = TextGray
+                    )
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Switch(
+                    checked = soundEffectsEnabled,
+                    onCheckedChange = {
+                        soundEffectsEnabled = it
+                        dataManager.setSoundEffectsEnabled(it)
+                    },
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = Color.White,
+                        checkedTrackColor = AccentBlue
+                    )
+                )
+            }
+        }
+
         Spacer(modifier = Modifier.height(24.dp))
 
         // Info section
@@ -153,3 +199,10 @@ fun SettingsScreen(
     }
 }
 
+@Preview(showBackground = true)
+@Composable
+fun SettingsScreenPreview() {
+    FlashCardsTheme {
+        SettingsScreen(onBack = {})
+    }
+}

@@ -477,6 +477,7 @@ fun StudySessionPreviewMobile() {
     FlashCardsTheme {
         StudySessionScreen(
             onClose = {},
+            deck = Deck(name = "Biology Exam", cardCount = 50, progress = 20, icon = "🧬"),
             totalCards = 50
         )
     }

@@ -10,6 +10,7 @@ import com.ramsalapps.flashcards.ui.DeckEditScreen
 import com.ramsalapps.flashcards.ui.ImportScreen
 import com.ramsalapps.flashcards.ui.SettingsScreen
 import com.ramsalapps.flashcards.ui.StudySessionScreen
+import com.ramsalapps.flashcards.ui.TestSessionScreen
 import com.ramsalapps.flashcards.ui.theme.FlashCardsTheme
 
 class MainActivity : ComponentActivity() {
@@ -20,12 +21,17 @@ class MainActivity : ComponentActivity() {
             FlashCardsTheme {
                 var currentScreen by remember { mutableStateOf(Screen.Dashboard) }
                 var decks by remember { mutableStateOf(emptyList<Deck>()) }
+                var testDecks by remember { mutableStateOf(emptyList<TestDeck>()) }
                 var selectedDeck by remember { mutableStateOf<Deck?>(null) }
+                var selectedTestDeck by remember { mutableStateOf<TestDeck?>(null) }
+                var isReinforceMode by remember { mutableStateOf(false) }
 
-                // Cargar decks al iniciar
+                val dataManager = remember { DataManager(this@MainActivity) }
+
+                // Cargar datos al iniciar
                 LaunchedEffect(Unit) {
-                    val dataManager = DataManager(this@MainActivity)
                     decks = dataManager.getAllDecks()
+                    testDecks = dataManager.getAllTestDecks()
                 }
 
                 when (currentScreen) {
@@ -37,41 +43,60 @@ class MainActivity : ComponentActivity() {
                             selectedDeck = deck
                             currentScreen = Screen.Study
                         },
+                        onTestDeckClick = { test ->
+                            selectedTestDeck = test
+                            isReinforceMode = false
+                            currentScreen = Screen.TestSession
+                        },
+                        onReinforceClick = { test ->
+                            selectedTestDeck = test
+                            isReinforceMode = true
+                            currentScreen = Screen.TestSession
+                        },
                         onDeckEdit = { deck ->
                             selectedDeck = deck
                             currentScreen = Screen.DeckEdit
                         },
                         onDeckDelete = { deckName ->
-                            val dataManager = DataManager(this@MainActivity)
                             dataManager.deleteDeck(deckName)
                             decks = dataManager.getAllDecks()
                         },
-                        decks = decks
+                        decks = decks,
+                        testDecks = testDecks
                     )
                     Screen.Study -> StudySessionScreen(
                         onClose = {
                             currentScreen = Screen.Dashboard
-                            // Recargar decks en caso de que se hayan actualizado
-                            val dataManager = DataManager(this@MainActivity)
                             decks = dataManager.getAllDecks()
                         },
                         deck = selectedDeck,
                         onDeckUpdate = { updatedDeck ->
-                            // Actualizar el deck en la base de datos
-                            val dataManager = DataManager(this@MainActivity)
                             dataManager.updateDeck(updatedDeck)
-
-                            // Actualizar la lista de decks
                             decks = dataManager.getAllDecks()
                             selectedDeck = updatedDeck
                         }
                     )
+                    Screen.TestSession -> {
+                        selectedTestDeck?.let { testDeck ->
+                            TestSessionScreen(
+                                onClose = { 
+                                    currentScreen = Screen.Dashboard 
+                                    testDecks = dataManager.getAllTestDecks()
+                                },
+                                testDeck = testDeck,
+                                reinforceMode = isReinforceMode,
+                                onTestComplete = { score, failedIds ->
+                                    dataManager.saveTestResult(testDeck.id, score, failedIds)
+                                    testDecks = dataManager.getAllTestDecks()
+                                }
+                            )
+                        }
+                    }
                     Screen.Import -> ImportScreen(
                         onBack = { currentScreen = Screen.Dashboard },
                         onDeckCreated = {
-                            // Recargar decks después de crear
-                            val dataManager = DataManager(this@MainActivity)
                             decks = dataManager.getAllDecks()
+                            testDecks = dataManager.getAllTestDecks()
                         }
                     )
                     Screen.Settings -> SettingsScreen(
@@ -82,7 +107,6 @@ class MainActivity : ComponentActivity() {
                         deck = selectedDeck ?: Deck(id = "", name = "Untitled", cardCount = 0, progress = 0),
                         onBack = { currentScreen = Screen.Dashboard },
                         onDeckUpdate = { updatedDeck ->
-                            val dataManager = DataManager(this@MainActivity)
                             dataManager.updateDeck(updatedDeck)
                             decks = dataManager.getAllDecks()
                             selectedDeck = updatedDeck
@@ -95,5 +119,5 @@ class MainActivity : ComponentActivity() {
 }
 
 enum class Screen {
-    Dashboard, Study, Import, Settings, DeckEdit
+    Dashboard, Study, Import, Settings, DeckEdit, TestSession
 }

@@ -16,6 +16,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.height
 import com.ramsalapps.flashcards.ui.theme.AccentBlue
 import com.ramsalapps.flashcards.ui.theme.TextGray
+import androidx.compose.ui.tooling.preview.Preview
+import com.ramsalapps.flashcards.ui.theme.FlashCardsTheme
 
 /**
  * Componente reutilizable de barra de navegación inferior
@@ -35,8 +37,7 @@ fun AppNavigationBar(
     onSettingsClick: () -> Unit = {}
 ) {
     NavigationBar(
-        containerColor = Color.White,
-        modifier = Modifier.height(80.dp)
+        containerColor = Color.White
     ) {
         // Home
         NavigationBarItem(
@@ -93,5 +94,13 @@ fun AppNavigationBar(
             selected = currentScreen == "settings",
             onClick = onSettingsClick
         )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun AppNavigationBarPreview() {
+    FlashCardsTheme {
+        AppNavigationBar(currentScreen = "home")
     }
 }

@@ -10,6 +10,11 @@ data class DeckWithFlashcards(
     val flashcards: List<Flashcard>
 )
 
+data class TestDeckWithQuestions(
+    val deck: TestDeck,
+    val questions: List<TestQuestion>
+)
+
 class DataManager(context: Context) {
     private val sharedPreferences: SharedPreferences =
         context.getSharedPreferences("flashcards_db", Context.MODE_PRIVATE)
@@ -23,6 +28,16 @@ class DataManager(context: Context) {
     fun isBionicReadingEnabled(): Boolean {
         return sharedPreferences.getBoolean("bionic_reading_enabled", true)
     }
+
+    fun setSoundEffectsEnabled(enabled: Boolean) {
+        sharedPreferences.edit().putBoolean("sound_effects_enabled", enabled).apply()
+    }
+
+    fun isSoundEffectsEnabled(): Boolean {
+        return sharedPreferences.getBoolean("sound_effects_enabled", true)
+    }
+
+    // --- Flashcard Decks ---
 
     fun saveDeck(deck: Deck) {
         val deckWithFlashcards = DeckWithFlashcards(deck, deck.flashcards)
@@ -84,6 +99,51 @@ class DataManager(context: Context) {
 
     fun updateDeck(deck: Deck) {
         saveDeck(deck)
+    }
+
+    // --- Test Decks ---
+
+    fun saveTestDeck(testDeckWithQuestions: TestDeckWithQuestions) {
+        val json = gson.toJson(testDeckWithQuestions)
+        sharedPreferences.edit().putString("test_deck_${testDeckWithQuestions.deck.id}", json).apply()
+        updateTestDecksList(testDeckWithQuestions.deck)
+    }
+
+    fun getTestDeck(testDeckId: String): TestDeckWithQuestions? {
+        val json = sharedPreferences.getString("test_deck_$testDeckId", null)
+        return if (json != null) {
+            gson.fromJson(json, TestDeckWithQuestions::class.java)
+        } else null
+    }
+
+    fun getAllTestDecks(): List<TestDeck> {
+        val testsJson = sharedPreferences.getString("all_test_decks", "[]")
+        return gson.fromJson(testsJson, object : TypeToken<List<TestDeck>>() {}.type)
+    }
+
+    private fun updateTestDecksList(testDeck: TestDeck) {
+        val currentTests = getAllTestDecks().toMutableList()
+        val existingIndex = currentTests.indexOfFirst { it.id == testDeck.id }
+
+        if (existingIndex >= 0) {
+            currentTests[existingIndex] = testDeck
+        } else {
+            currentTests.add(testDeck)
+        }
+
+        val json = gson.toJson(currentTests)
+        sharedPreferences.edit().putString("all_test_decks", json).apply()
+    }
+
+    fun saveTestResult(testDeckId: String, score: Int, failedIds: List<String>) {
+        val testWithQuestions = getTestDeck(testDeckId)
+        if (testWithQuestions != null) {
+            val updatedDeck = testWithQuestions.deck.copy(
+                lastScore = score,
+                failedQuestionIds = failedIds
+            )
+            saveTestDeck(TestDeckWithQuestions(updatedDeck, testWithQuestions.questions))
+        }
     }
 
     // Métodos para gestionar flashcards

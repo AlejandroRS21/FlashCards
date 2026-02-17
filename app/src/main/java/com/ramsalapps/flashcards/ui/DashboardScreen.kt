@@ -20,6 +20,8 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Assignment
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -33,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ramsalapps.flashcards.Deck
 import com.ramsalapps.flashcards.Session
+import com.ramsalapps.flashcards.TestDeck
 import com.ramsalapps.flashcards.ui.components.AppNavigationBar
 import com.ramsalapps.flashcards.ui.theme.*
 import com.ramsalapps.flashcards.ui.theme.Spacing
@@ -48,9 +51,12 @@ fun DashboardScreen(
     onImportClick: () -> Unit,
     onSettingsClick: () -> Unit = {},
     onDeckClick: (Deck) -> Unit = {},
+    onTestDeckClick: (TestDeck) -> Unit = {},
     onDeckEdit: (Deck) -> Unit = {},
     onDeckDelete: (String) -> Unit = {},
+    onReinforceClick: (TestDeck) -> Unit = {},
     decks: List<Deck> = emptyList(),
+    testDecks: List<TestDeck> = emptyList(),
     recentSessions: List<Session> = emptyList(),
     streakDays: String = "0",
     masteredCards: String = "0",
@@ -86,12 +92,9 @@ fun DashboardScreen(
                 item { Header(userName) }
                 item { DailyGoalCard(streakDays, masteredCards, dailyGoalProgress) }
                 item { StartReviewButton(onStartReview) }
-                item { SectionHeader(title = "Recent Decks", action = null) }
-                items(recentSessions) { session ->
-                    SessionItem(session)
-                }
-                item { SectionHeader(title = "All Decks", action = "View All") }
-                // Usar 'items' directamente en LazyColumn para decks
+                
+                // --- Flashcard Decks Section ---
+                item { SectionHeader(title = "Your Decks", action = "View All") }
                 if (deviceType == DeviceType.MOBILE) {
                     item {
                         LazyRow(
@@ -116,7 +119,7 @@ fun DashboardScreen(
                             columns = GridCells.Fixed(if (deviceType == DeviceType.TABLET) 2 else 3),
                             horizontalArrangement = Arrangement.spacedBy(Spacing.lg),
                             verticalArrangement = Arrangement.spacedBy(Spacing.lg),
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth().heightIn(max = 400.dp),
                             userScrollEnabled = false
                         ) {
                             items(decks.size) { index ->
@@ -130,6 +133,110 @@ fun DashboardScreen(
                             }
                         }
                     }
+                }
+
+                // --- Tests Section ---
+                item { Spacer(modifier = Modifier.height(Spacing.lg)) }
+                item { SectionHeader(title = "Practice Tests", action = null) }
+                items(testDecks) { testDeck ->
+                    TestDeckItem(
+                        testDeck = testDeck,
+                        onClick = { onTestDeckClick(testDeck) },
+                        onReinforceClick = { onReinforceClick(testDeck) }
+                    )
+                }
+
+                // --- Recent Activity ---
+                item { Spacer(modifier = Modifier.height(Spacing.lg)) }
+                item { SectionHeader(title = "Recent Activity", action = null) }
+                items(recentSessions) { session ->
+                    SessionItem(session)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun TestDeckItem(
+    testDeck: TestDeck,
+    onClick: () -> Unit,
+    onReinforceClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp)
+            .clickable { onClick() },
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(BorderRadius.md)
+    ) {
+        Column(modifier = Modifier.padding(Spacing.lg)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(BorderRadius.sm))
+                        .background(PastelBlue),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(testDeck.icon, fontSize = 20.sp)
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(testDeck.name, fontWeight = FontWeight.Bold, color = TextDark)
+                    Text("${testDeck.questionCount} Questions", fontSize = 12.sp, color = TextGray)
+                }
+                if (testDeck.lastScore != null) {
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            "${testDeck.lastScore}%",
+                            fontWeight = FontWeight.Bold,
+                            color = if (testDeck.lastScore >= 70) Color(0xFF4CAF50) else Color(0xFFFF6B6B),
+                            fontSize = 18.sp
+                        )
+                        Text("Last Score", fontSize = 10.sp, color = TextGray)
+                    }
+                }
+            }
+            
+            if (testDeck.failedQuestionIds.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(Spacing.md))
+                Divider(color = Color(0xFFF0F0F0))
+                Spacer(modifier = Modifier.height(Spacing.sm))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Default.Error,
+                            contentDescription = null,
+                            tint = Color(0xFFFF6B6B),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            "${testDeck.failedQuestionIds.size} mistakes to review",
+                            fontSize = 12.sp,
+                            color = Color(0xFFFF6B6B),
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                    Text(
+                        "Reinforce",
+                        modifier = Modifier
+                            .clickable { onReinforceClick() }
+                            .background(Color(0xFFFFEBEE), RoundedCornerShape(4.dp))
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                        color = Color(0xFFC62828),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
         }
@@ -401,30 +508,9 @@ fun DashboardPreviewMobile() {
                 Deck(name = "Spanish 101", cardCount = 45, progress = 30, icon = "💃"),
                 Deck(name = "History", cardCount = 75, progress = 50, icon = "📜")
             ),
-            recentSessions = listOf(
-                Session("Medical Terms", "Yesterday", "15 mins", 12, "🩺"),
-                Session("World History", "2 days ago", "10 mins", 5, "📜")
-            )
-        )
-    }
-}
-
-@Preview(name = "Tablet", widthDp = 600, heightDp = 800)
-@Composable
-fun DashboardPreviewTablet() {
-    FlashCardsTheme {
-        DashboardScreen(
-            onStartReview = {},
-            onImportClick = {},
-            onSettingsClick = {},
-            userName = "Jordan",
-            streakDays = "14",
-            masteredCards = "480",
-            dailyGoalProgress = 0.85f,
-            decks = listOf(
-                Deck(name = "Medical Terms", cardCount = 120, progress = 80, icon = "🩺"),
-                Deck(name = "Spanish 101", cardCount = 45, progress = 30, icon = "💃"),
-                Deck(name = "History", cardCount = 75, progress = 50, icon = "📜")
+            testDecks = listOf(
+                TestDeck(name = "Anatomy Quiz", questionCount = 50, lastScore = 85, icon = "🦴"),
+                TestDeck(name = "Driver's Test", questionCount = 30, lastScore = 60, icon = "🚗", failedQuestionIds = listOf("1", "2", "3"))
             ),
             recentSessions = listOf(
                 Session("Medical Terms", "Yesterday", "15 mins", 12, "🩺"),
@@ -433,5 +519,3 @@ fun DashboardPreviewTablet() {
         )
     }
 }
-
-

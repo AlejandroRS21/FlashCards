@@ -28,6 +28,8 @@ import com.ramsalapps.flashcards.ui.theme.Spacing
 import com.ramsalapps.flashcards.ui.theme.BorderRadius
 import com.ramsalapps.flashcards.designsystem.components.DesignSystemButton
 import com.ramsalapps.flashcards.designsystem.components.DesignSystemCard
+import androidx.compose.ui.tooling.preview.Preview
+import com.ramsalapps.flashcards.ui.theme.FlashCardsTheme
 import com.ramsalapps.flashcards.designsystem.components.ButtonSize
 
 @Composable
@@ -281,6 +283,18 @@ fun FlashcardEditItem(
                     .clickable { onDelete() }
             )
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun DeckEditScreenPreview() {
+    FlashCardsTheme {
+        DeckEditScreen(
+            deck = Deck(name = "Biology", cardCount = 10, progress = 50, icon = "🧬"),
+            onBack = {},
+            onDeckUpdate = {}
+        )
     }
 }
 
