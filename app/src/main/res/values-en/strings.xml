@@ -1,0 +1,30 @@
+<resources>
+    <string name="app_name">FlashCards</string>
+    <string name="close">Close</string>
+    <string name="study_session">Study Session</string>
+    <string name="edit">Edit</string>
+    <string name="stats">Stats</string>
+    <string name="session_progress">Session Progress</string>
+    <string name="tap_to_see_question">Tap to see question</string>
+    <string name="tap_to_see_answer">Tap to see answer</string>
+    <string name="previous">Previous</string>
+    <string name="next">Next</string>
+    <string name="shuffle">Shuffle</string>
+    <string name="reset">Reset</string>
+    <string name="edit_deck_name">Edit Deck Name</string>
+    <string name="deck_name">Deck Name</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="question_count">Question %1$d/%2$d</string>
+    <string name="select_accurate_answer">Select the most accurate answer from the list below.</string>
+    <string name="check_answer">Check Answer</string>
+    <string name="next_question">Next Question</string>
+    <string name="view_results">View Results</string>
+    <string name="test_completed">Test Completed!</string>
+    <string name="back_to_dashboard">Back to Dashboard</string>
+    <string name="no_questions">No questions to review.</string>
+    <string name="excellent">Excellent! You\'re a master!</string>
+    <string name="great_job">Great job! Keep it up!</string>
+    <string name="good_effort">Good effort! A bit more study will help.</string>
+    <string name="dont_give_up">Don\'t give up! Review your mistakes and try again.</string>
+</resources>
