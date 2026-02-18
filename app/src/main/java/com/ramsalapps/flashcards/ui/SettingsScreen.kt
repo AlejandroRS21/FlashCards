@@ -27,7 +27,8 @@ import com.ramsalapps.flashcards.ui.theme.FlashCardsTheme
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit,
-    onImportClick: () -> Unit = {}
+    onImportClick: () -> Unit = {},
+    onHomeClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val dataManager = DataManager(context)
@@ -43,7 +44,12 @@ fun SettingsScreen(
     Scaffold(
         contentWindowInsets = WindowInsets.systemBars,
         bottomBar = {
-            AppNavigationBar(currentScreen = "settings", onImportClick = onImportClick, onSettingsClick = onBack)
+            AppNavigationBar(
+                currentScreen = "settings",
+                onHomeClick = onHomeClick,
+                onImportClick = onImportClick,
+                onSettingsClick = {} // Already here
+            )
         }
     ) { padding ->
         Column(

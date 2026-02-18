@@ -6,23 +6,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 private val LightColorScheme = lightColorScheme(
-    primary = AccentBlue,
-    onPrimary = Color.White,
-    secondary = AccentPink,
+    primary = PowderBlue,
+    onPrimary = TextDark,
+    secondary = PeachPuff,
     onSecondary = TextDark,
-    tertiary = AccentGreen,
-    background = Color.White,
+    tertiary = LemonChiffon,
+    background = Cream,
     surface = Color.White,
     onBackground = TextDark,
-    onSurface = TextDark
+    onSurface = TextDark,
+    surfaceVariant = Cream,
+    onSurfaceVariant = TextGray
 )
 
 @Composable
 fun FlashCardsTheme(
     content: @Composable () -> Unit
 ) {
-    // Forzamos siempre el LightColorScheme para ignorar el tema oscuro del sistema
-    // y mantener la estética pastel.
     MaterialTheme(
         colorScheme = LightColorScheme,
         typography = Typography,

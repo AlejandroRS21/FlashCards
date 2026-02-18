@@ -14,6 +14,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,11 +23,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ramsalapps.flashcards.DataManager
+import com.ramsalapps.flashcards.R
 import com.ramsalapps.flashcards.TestDeck
 import com.ramsalapps.flashcards.TestQuestion
 import com.ramsalapps.flashcards.ui.theme.*
@@ -41,6 +45,7 @@ fun TestSessionScreen(
     val dataManager = remember { DataManager(context) }
     val toneGenerator = remember { ToneGenerator(AudioManager.STREAM_MUSIC, 100) }
     val soundEnabled = remember { dataManager.isSoundEffectsEnabled() }
+    val bionicEnabled = remember { dataManager.isBionicReadingEnabled() }
     
     val questions = remember(testDeck.id, reinforceMode) {
         val baseQuestions = dataManager.getTestDeck(testDeck.id)?.questions ?: emptyList()
@@ -51,19 +56,18 @@ fun TestSessionScreen(
         }
     }
 
+    // State to track status of each question
+    val answeredIndices = remember { mutableStateMapOf<Int, Int?>() } // index to selected option index
     var currentIndex by remember { mutableStateOf(0) }
-    var selectedOptionIndex by remember { mutableStateOf<Int?>(null) }
-    var isAnswered by remember { mutableStateOf(false) }
-    var score by remember { mutableStateOf(0) }
     val failedIds = remember { mutableStateListOf<String>() }
     var showResults by remember { mutableStateOf(false) }
 
     if (questions.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize().background(PastelBlue), contentAlignment = Alignment.Center) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("No questions to review.", color = TextDark, fontSize = 18.sp)
+                Text(stringResource(R.string.no_questions), color = TextDark, fontSize = 18.sp)
                 Spacer(modifier = Modifier.height(16.dp))
-                Button(onClick = onClose) { Text("Back to Dashboard") }
+                Button(onClick = onClose) { Text(stringResource(R.string.back_to_dashboard)) }
             }
         }
         return
@@ -71,11 +75,15 @@ fun TestSessionScreen(
 
     if (showResults) {
         val totalQuestions = questions.size
+        val scoreCount = answeredIndices.entries.count { (idx, selected) -> 
+            selected == questions[idx].correctAnswerIndex 
+        }
         TestResultsView(
-            score = score,
+            score = scoreCount,
             total = totalQuestions,
             onFinish = {
-                if (totalQuestions > 0) onTestComplete((score * 100) / totalQuestions, failedIds.toList())
+                val finalScore = if (totalQuestions > 0) (scoreCount * 100) / totalQuestions else 0
+                onTestComplete(finalScore, failedIds.toList())
                 onClose()
             }
         )
@@ -83,6 +91,17 @@ fun TestSessionScreen(
     }
 
     val currentQuestion = questions[currentIndex]
+    val selectedOptionIndex = answeredIndices[currentIndex]
+    val isAnswered = selectedOptionIndex != null
+
+    val optionColors = listOf(
+        Color(0xFFFFADAD), // Reddish
+        Color(0xFFFFD6A5), // Orangish
+        Color(0xFFFDFFB6), // Yellowish
+        Color(0xFFCAFFBF), // Greenish
+        Color(0xFF9BF6FF), // Bluish
+        Color(0xFFA0C4FF)  // Indigo
+    )
 
     Column(
         modifier = Modifier
@@ -97,10 +116,10 @@ fun TestSessionScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onClose) {
-                Icon(Icons.Default.Close, contentDescription = "Close", tint = TextDark)
+                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.close), tint = TextDark)
             }
             Text(
-                "Question ${currentIndex + 1}/${questions.size}",
+                stringResource(R.string.question_count, currentIndex + 1, questions.size),
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp,
                 color = TextDark
@@ -122,16 +141,25 @@ fun TestSessionScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                Text(
-                    text = currentQuestion.question,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                    color = TextDark
-                )
+                if (bionicEnabled) {
+                    BionicText(
+                        text = currentQuestion.question,
+                        fontSize = 20.sp,
+                        color = TextDark,
+                        textAlign = TextAlign.Center
+                    )
+                } else {
+                    Text(
+                        text = currentQuestion.question,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                        color = TextDark
+                    )
+                }
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    text = "Select the most accurate answer from the list below.",
+                    text = stringResource(R.string.select_accurate_answer),
                     fontSize = 14.sp,
                     color = TextGray,
                     textAlign = TextAlign.Center
@@ -141,7 +169,7 @@ fun TestSessionScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Options scrollable to avoid deformation
+        // Options
         Column(
             modifier = Modifier
                 .weight(1f)
@@ -150,26 +178,34 @@ fun TestSessionScreen(
         ) {
             currentQuestion.options.forEachIndexed { index, option ->
                 if (option.isNotBlank()) {
-                    val isSelected = selectedOptionIndex == index
+                    val isThisSelected = selectedOptionIndex == index
                     val isCorrect = index == currentQuestion.correctAnswerIndex
                     
                     val backgroundColor = when {
                         isAnswered && isCorrect -> Color(0xFFE8F5E9)
-                        isAnswered && isSelected && !isCorrect -> Color(0xFFFFEBEE)
+                        isAnswered && isThisSelected && !isCorrect -> Color(0xFFFFEBEE)
                         else -> Color.White
                     }
                     
                     val borderColor = when {
                         isAnswered && isCorrect -> Color(0xFF4CAF50)
-                        isAnswered && isSelected && !isCorrect -> Color(0xFFFF6B6B)
-                        else -> Color.Transparent
+                        isAnswered && isThisSelected && !isCorrect -> Color(0xFFFF6B6B)
+                        else -> optionColors[index % optionColors.size]
                     }
 
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .border(1.dp, if (isSelected && !isAnswered) AccentBlue else borderColor, RoundedCornerShape(16.dp))
-                            .clickable(enabled = !isAnswered) { selectedOptionIndex = index },
+                            .border(2.dp, borderColor, RoundedCornerShape(16.dp))
+                            .clickable(enabled = !isAnswered) { 
+                                answeredIndices[currentIndex] = index
+                                if (index == currentQuestion.correctAnswerIndex) {
+                                    if (soundEnabled) toneGenerator.startTone(ToneGenerator.TONE_PROP_ACK, 200)
+                                } else {
+                                    failedIds.add(currentQuestion.id)
+                                    if (soundEnabled) toneGenerator.startTone(ToneGenerator.TONE_PROP_NACK, 200)
+                                }
+                            },
                         colors = CardDefaults.cardColors(containerColor = backgroundColor),
                         shape = RoundedCornerShape(16.dp),
                         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
@@ -181,27 +217,36 @@ fun TestSessionScreen(
                             Box(
                                 modifier = Modifier
                                     .size(36.dp)
-                                    .background(Color(0xFFE3F2FD), RoundedCornerShape(8.dp)),
+                                    .background(borderColor.copy(alpha = 0.2f), RoundedCornerShape(8.dp)),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
                                     text = "${(65 + index).toChar()}",
-                                    color = AccentBlue,
+                                    color = borderColor,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 16.sp
                                 )
                             }
                             Spacer(modifier = Modifier.width(16.dp))
-                            Text(
-                                text = option,
-                                fontSize = 16.sp,
-                                color = TextDark,
-                                modifier = Modifier.weight(1f)
-                            )
+                            if (bionicEnabled) {
+                                BionicText(
+                                    text = option,
+                                    fontSize = 16.sp,
+                                    color = TextDark,
+                                    modifier = Modifier.weight(1f)
+                                )
+                            } else {
+                                Text(
+                                    text = option,
+                                    fontSize = 16.sp,
+                                    color = TextDark,
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
                             if (isAnswered) {
                                 if (isCorrect) {
                                     Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF4CAF50))
-                                } else if (isSelected) {
+                                } else if (isThisSelected) {
                                     Icon(Icons.Default.Cancel, contentDescription = null, tint = Color(0xFFFF6B6B))
                                 }
                             }
@@ -231,41 +276,40 @@ fun TestSessionScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Button(
-            onClick = {
-                if (!isAnswered) {
-                    isAnswered = true
-                    if (selectedOptionIndex == currentQuestion.correctAnswerIndex) {
-                        score++
-                        if (soundEnabled) toneGenerator.startTone(ToneGenerator.TONE_PROP_ACK, 200)
-                    } else {
-                        failedIds.add(currentQuestion.id)
-                        if (soundEnabled) toneGenerator.startTone(ToneGenerator.TONE_PROP_NACK, 200)
-                    }
-                } else {
+        // Navigation Controls
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Button(
+                onClick = { if (currentIndex > 0) currentIndex-- },
+                modifier = Modifier.weight(1f).height(56.dp),
+                enabled = currentIndex > 0,
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = TextDark)
+            ) {
+                Icon(Icons.Default.ArrowBack, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(stringResource(R.string.previous))
+            }
+
+            Button(
+                onClick = { 
                     if (currentIndex < questions.size - 1) {
                         currentIndex++
-                        isAnswered = false
-                        selectedOptionIndex = null
                     } else {
                         showResults = true
                     }
-                }
-            },
-            modifier = Modifier.fillMaxWidth().height(56.dp),
-            enabled = selectedOptionIndex != null,
-            shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = if (!isAnswered) AccentBlue else Color(0xFF4CAF50)
-            )
-        ) {
-            Text(
-                if (!isAnswered) "Check Answer" 
-                else if (currentIndex < questions.size - 1) "Next Question" 
-                else "View Results",
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
-            )
+                },
+                modifier = Modifier.weight(1f).height(56.dp),
+                enabled = isAnswered,
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = AccentBlue)
+            ) {
+                Text(if (currentIndex < questions.size - 1) stringResource(R.string.next) else stringResource(R.string.view_results))
+                Spacer(modifier = Modifier.width(8.dp))
+                Icon(Icons.Default.ArrowForward, contentDescription = null)
+            }
         }
     }
 }
@@ -290,7 +334,7 @@ fun TestResultsView(score: Int, total: Int, onFinish: () -> Unit) {
                 modifier = Modifier.padding(32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("Test Completed!", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = TextDark)
+                Text(stringResource(R.string.test_completed), fontSize = 24.sp, fontWeight = FontWeight.Bold, color = TextDark)
                 Spacer(modifier = Modifier.height(32.dp))
                 
                 Box(contentAlignment = Alignment.Center) {
@@ -316,11 +360,11 @@ fun TestResultsView(score: Int, total: Int, onFinish: () -> Unit) {
                 Spacer(modifier = Modifier.height(40.dp))
                 
                 val feedback = when {
-                    total == 0 -> "No questions were in this test."
-                    score.toFloat() / total >= 0.9 -> "Excellent! You're a master!"
-                    score.toFloat() / total >= 0.7 -> "Great job! Keep it up!"
-                    score.toFloat() / total >= 0.5 -> "Good effort! A bit more study will help."
-                    else -> "Don't give up! Review your mistakes and try again."
+                    total == 0 -> stringResource(R.string.no_questions)
+                    score.toFloat() / total >= 0.9 -> stringResource(R.string.excellent)
+                    score.toFloat() / total >= 0.7 -> stringResource(R.string.great_job)
+                    score.toFloat() / total >= 0.5 -> stringResource(R.string.good_effort)
+                    else -> stringResource(R.string.dont_give_up)
                 }
                 
                 Text(
@@ -339,7 +383,7 @@ fun TestResultsView(score: Int, total: Int, onFinish: () -> Unit) {
                     colors = ButtonDefaults.buttonColors(containerColor = AccentBlue),
                     shape = RoundedCornerShape(16.dp)
                 ) {
-                    Text("Back to Dashboard", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text(stringResource(R.string.back_to_dashboard), fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 }
             }
         }

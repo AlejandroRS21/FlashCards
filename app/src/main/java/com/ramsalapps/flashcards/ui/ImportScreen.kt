@@ -69,7 +69,9 @@ fun ImportScreen(
     onBack: () -> Unit,
     recentImports: List<Pair<String, String>> = emptyList(),
     onImportFinalized: (String, Uri) -> Unit = { _, _ -> },
-    onDeckCreated: () -> Unit = {}
+    onDeckCreated: () -> Unit = {},
+    onHomeClick: () -> Unit = {},
+    onSettingsClick: () -> Unit = {}
 ) {
     BackHandler { onBack() }
 
@@ -139,7 +141,12 @@ fun ImportScreen(
         },
         bottomBar = {
             if (importStep == ImportStep.SELECT_TYPE || importStep == ImportStep.SELECT_FILE) {
-                AppNavigationBar(currentScreen = "import", onImportClick = {})
+                AppNavigationBar(
+                    currentScreen = "import",
+                    onHomeClick = onHomeClick,
+                    onImportClick = {}, // We're already here
+                    onSettingsClick = onSettingsClick
+                )
             }
         }
     ) { padding ->

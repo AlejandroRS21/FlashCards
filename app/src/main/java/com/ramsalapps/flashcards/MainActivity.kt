@@ -25,6 +25,7 @@ class MainActivity : ComponentActivity() {
                 var selectedDeck by remember { mutableStateOf<Deck?>(null) }
                 var selectedTestDeck by remember { mutableStateOf<TestDeck?>(null) }
                 var isReinforceMode by remember { mutableStateOf(false) }
+                var userStats by remember { mutableStateOf(UserStats()) }
 
                 val dataManager = remember { DataManager(this@MainActivity) }
 
@@ -32,6 +33,7 @@ class MainActivity : ComponentActivity() {
                 LaunchedEffect(Unit) {
                     decks = dataManager.getAllDecks()
                     testDecks = dataManager.getAllTestDecks()
+                    userStats = dataManager.getUserStats()
                 }
 
                 when (currentScreen) {
@@ -62,18 +64,28 @@ class MainActivity : ComponentActivity() {
                             decks = dataManager.getAllDecks()
                         },
                         decks = decks,
-                        testDecks = testDecks
+                        testDecks = testDecks,
+                        streakDays = userStats.streakCount.toString(),
+                        masteredCards = userStats.masteredCardsTotal.toString(),
+                        dailyGoalProgress = userStats.dailyGoalProgress
                     )
                     Screen.Study -> StudySessionScreen(
                         onClose = {
                             currentScreen = Screen.Dashboard
                             decks = dataManager.getAllDecks()
+                            userStats = dataManager.getUserStats()
                         },
                         deck = selectedDeck,
                         onDeckUpdate = { updatedDeck ->
                             dataManager.updateDeck(updatedDeck)
                             decks = dataManager.getAllDecks()
                             selectedDeck = updatedDeck
+                        },
+                        onCardMastered = { cardId ->
+                            selectedDeck?.let { deck ->
+                                dataManager.markCardAsMastered(deck.name, cardId)
+                                dataManager.updateDailyProgress()
+                            }
                         }
                     )
                     Screen.TestSession -> {
@@ -82,12 +94,14 @@ class MainActivity : ComponentActivity() {
                                 onClose = { 
                                     currentScreen = Screen.Dashboard 
                                     testDecks = dataManager.getAllTestDecks()
+                                    userStats = dataManager.getUserStats()
                                 },
                                 testDeck = testDeck,
                                 reinforceMode = isReinforceMode,
                                 onTestComplete = { score, failedIds ->
                                     dataManager.saveTestResult(testDeck.id, score, failedIds)
                                     testDecks = dataManager.getAllTestDecks()
+                                    dataManager.updateDailyProgress()
                                 }
                             )
                         }
@@ -97,14 +111,17 @@ class MainActivity : ComponentActivity() {
                         onDeckCreated = {
                             decks = dataManager.getAllDecks()
                             testDecks = dataManager.getAllTestDecks()
-                        }
+                        },
+                        onHomeClick = { currentScreen = Screen.Dashboard },
+                        onSettingsClick = { currentScreen = Screen.Settings }
                     )
                     Screen.Settings -> SettingsScreen(
                         onBack = { currentScreen = Screen.Dashboard },
-                        onImportClick = { currentScreen = Screen.Import }
+                        onImportClick = { currentScreen = Screen.Import },
+                        onHomeClick = { currentScreen = Screen.Dashboard }
                     )
                     Screen.DeckEdit -> DeckEditScreen(
-                        deck = selectedDeck ?: Deck(id = "", name = "Untitled", cardCount = 0, progress = 0),
+                        deck = selectedDeck ?: Deck(name = "Untitled", cardCount = 0, progress = 0),
                         onBack = { currentScreen = Screen.Dashboard },
                         onDeckUpdate = { updatedDeck ->
                             dataManager.updateDeck(updatedDeck)

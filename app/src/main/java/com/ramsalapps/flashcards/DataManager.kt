@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import java.util.Calendar
 
 data class DeckWithFlashcards(
     val deck: Deck,
@@ -20,7 +21,83 @@ class DataManager(context: Context) {
         context.getSharedPreferences("flashcards_db", Context.MODE_PRIVATE)
     private val gson = Gson()
 
-    // Métodos para preferencias de usuario
+    // --- User Stats ---
+
+    fun getUserStats(): UserStats {
+        val json = sharedPreferences.getString("user_stats", null)
+        return if (json != null) {
+            gson.fromJson(json, UserStats::class.java)
+        } else UserStats()
+    }
+
+    private fun saveUserStats(stats: UserStats) {
+        val json = gson.toJson(stats)
+        sharedPreferences.edit().putString("user_stats", json).apply()
+    }
+
+    fun updateDailyProgress() {
+        val stats = getUserStats()
+        val now = System.currentTimeMillis()
+        val calendar = Calendar.getInstance()
+        
+        val lastActivity = Calendar.getInstance().apply { timeInMillis = stats.lastActivityDate }
+        val today = Calendar.getInstance()
+
+        val isSameDay = today.get(Calendar.YEAR) == lastActivity.get(Calendar.YEAR) &&
+                today.get(Calendar.DAY_OF_YEAR) == lastActivity.get(Calendar.DAY_OF_YEAR)
+
+        val newStats = if (isSameDay) {
+            stats.copy(
+                cardsReviewedToday = stats.cardsReviewedToday + 1,
+                lastActivityDate = now,
+                dailyGoalProgress = (stats.cardsReviewedToday + 1).toFloat() / stats.dailyGoalTarget
+            )
+        } else {
+            // Comprobar racha
+            val yesterday = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -1) }
+            val wasYesterday = yesterday.get(Calendar.YEAR) == lastActivity.get(Calendar.YEAR) &&
+                    yesterday.get(Calendar.DAY_OF_YEAR) == lastActivity.get(Calendar.DAY_OF_YEAR)
+
+            stats.copy(
+                streakCount = if (wasYesterday) stats.streakCount + 1 else 1,
+                cardsReviewedToday = 1,
+                lastActivityDate = now,
+                dailyGoalProgress = 1f / stats.dailyGoalTarget
+            )
+        }
+        saveUserStats(newStats)
+    }
+
+    fun markCardAsMastered(deckName: String, cardId: String) {
+        val deckWithFlashcards = getDeck(deckName)
+        if (deckWithFlashcards != null) {
+            val updatedFlashcards = deckWithFlashcards.flashcards.map {
+                if (it.id == cardId && !it.isMastered) {
+                    it.copy(isMastered = true)
+                } else it
+            }
+            
+            val masteredCount = updatedFlashcards.count { it.isMastered }
+            val totalCount = updatedFlashcards.size
+            val newProgress = if (totalCount > 0) (masteredCount * 100) / totalCount else 0
+            
+            val updatedDeck = deckWithFlashcards.deck.copy(
+                flashcards = updatedFlashcards,
+                progress = newProgress
+            )
+            
+            saveDeck(DeckWithFlashcards(updatedDeck, updatedFlashcards))
+            
+            // Actualizar total de dominadas en stats si es nueva
+            val oldMastered = deckWithFlashcards.flashcards.find { it.id == cardId }?.isMastered ?: false
+            if (!oldMastered) {
+                val stats = getUserStats()
+                saveUserStats(stats.copy(masteredCardsTotal = stats.masteredCardsTotal + 1))
+            }
+        }
+    }
+
+    // --- Métodos para preferencias de usuario ---
     fun setBionicReadingEnabled(enabled: Boolean) {
         sharedPreferences.edit().putBoolean("bionic_reading_enabled", enabled).apply()
     }
@@ -63,17 +140,15 @@ class DataManager(context: Context) {
         val decksJson = sharedPreferences.getString("all_decks", "[]")
         val decksList: List<Deck> = gson.fromJson(decksJson, object : TypeToken<List<Deck>>() {}.type)
 
-        // Para cada deck, cargar sus flashcards desde el almacenamiento
         return decksList.map { deck ->
             val deckWithFlashcards = getDeck(deck.name)
             if (deckWithFlashcards != null) {
-                deck.copy(flashcards = deckWithFlashcards.flashcards)
+                deck.copy(flashcards = deckWithFlashcards.flashcards, progress = deckWithFlashcards.deck.progress)
             } else {
                 deck
             }
         }
     }
-
 
     private fun updateDecksList(deck: Deck) {
         val currentDecks = getAllDecks().toMutableList()
@@ -146,7 +221,6 @@ class DataManager(context: Context) {
         }
     }
 
-    // Métodos para gestionar flashcards
     fun deleteFlashcard(deckName: String, flashcardId: String) {
         val deckWithFlashcards = getDeck(deckName)
         if (deckWithFlashcards != null) {

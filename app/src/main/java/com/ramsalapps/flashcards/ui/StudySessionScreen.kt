@@ -10,13 +10,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Casino
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -34,11 +29,11 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.TextUnit
 import com.ramsalapps.flashcards.DataManager
 import com.ramsalapps.flashcards.Deck
+import com.ramsalapps.flashcards.R
 import com.ramsalapps.flashcards.ui.theme.*
 import com.ramsalapps.flashcards.ui.theme.Spacing
 import com.ramsalapps.flashcards.ui.theme.BorderRadius
 import com.ramsalapps.flashcards.designsystem.components.DesignSystemButton
-import com.ramsalapps.flashcards.designsystem.components.DesignSystemCard
 import com.ramsalapps.flashcards.designsystem.components.ButtonSize
 import kotlinx.coroutines.launch
 import kotlin.math.abs
@@ -48,7 +43,8 @@ fun StudySessionScreen(
     onClose: () -> Unit,
     deck: Deck? = null,
     totalCards: Int = 1,
-    onDeckUpdate: (Deck) -> Unit = {}
+    onDeckUpdate: (Deck) -> Unit = {},
+    onCardMastered: (String) -> Unit = {}
 ) {
     val context = LocalContext.current
     val dataManager = DataManager(context)
@@ -75,12 +71,7 @@ fun StudySessionScreen(
     )
 
     val cardBackgroundColors = listOf(
-        Color(0xFFFFE4E1), // Misty Rose
-        Color(0xFFE8D4F1), // Lavender Blush
-        Color(0xFFD4E8F7), // Alice Blue
-        Color(0xFFD4F1E8), // Mint Cream
-        Color(0xFFFFFACD), // Lemon Chiffon
-        Color(0xFFFFE4B5)  // Moccasin
+        PeachPuff, MistyRose, LemonChiffon, Color(0xFFE0F7FA), PastelPurple, PastelGreen
     )
 
     fun shuffleCards() {
@@ -96,13 +87,11 @@ fun StudySessionScreen(
     }
 
     suspend fun animateSwipeNext() {
-        // Swipe para siguiente: se desliza a la izquierda (offset negativo)
         offsetX.animateTo(-1200f, animationSpec = tween(durationMillis = 400))
         offsetX.snapTo(0f)
     }
 
     suspend fun animateSwipePrevious() {
-        // Swipe para anterior: se desliza a la derecha (offset positivo)
         offsetX.animateTo(1200f, animationSpec = tween(durationMillis = 400))
         offsetX.snapTo(0f)
     }
@@ -130,7 +119,7 @@ fun StudySessionScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(PastelPurple)
+            .background(Cream)
             .systemBarsPadding()
             .padding(Spacing.xl)
     ) {
@@ -139,33 +128,31 @@ fun StudySessionScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                Icons.Default.Close,
-                contentDescription = "Close",
-                tint = TextDark,
-                modifier = Modifier.clickable { onClose() }
-            )
+            IconButton(onClick = onClose) {
+                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.close), tint = TextDark)
+            }
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.weight(1f),
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text(
-                    deck?.name ?: "Bionic Study Session",
+                    deck?.name ?: stringResource(R.string.study_session),
                     fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp
+                    fontSize = 20.sp,
+                    color = TextDark
                 )
                 Spacer(modifier = Modifier.width(Spacing.sm))
-                Icon(
-                    Icons.Default.Edit,
-                    contentDescription = "Edit name",
-                    tint = TextDark,
-                    modifier = Modifier
-                        .size(20.dp)
-                        .clickable { showEditDialog = true }
-                )
+                IconButton(onClick = { showEditDialog = true }, modifier = Modifier.size(24.dp)) {
+                    Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.edit), tint = TextGray, modifier = Modifier.size(18.dp))
+                }
             }
-            Icon(Icons.Default.Info, contentDescription = "Stats", tint = TextDark)
+            IconButton(onClick = {
+                currentCard?.let { onCardMastered(it.id) }
+                goToNextWithAnimation()
+            }) {
+                Icon(Icons.Default.CheckCircle, contentDescription = "Mastered", tint = Color(0xFF4CAF50))
+            }
         }
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -174,27 +161,24 @@ fun StudySessionScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text("Session Progress", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-            Text("${currentIndex + 1} / $displayTotal cards", color = TextGray, fontSize = 14.sp)
+            Text(stringResource(R.string.session_progress), fontWeight = FontWeight.Bold, fontSize = 14.sp, color = TextDark)
+            Text("${currentIndex + 1} / $displayTotal", color = TextGray, fontSize = 14.sp)
         }
         Spacer(modifier = Modifier.height(Spacing.sm))
         LinearProgressIndicator(
             progress = { if (displayTotal > 0) (currentIndex + 1).toFloat() / displayTotal else 0f },
             modifier = Modifier.fillMaxWidth().height(8.dp).clip(CircleShape),
-            color = AccentBlue,
-            trackColor = Color.White.copy(alpha = 0.5f)
+            color = PowderBlue,
+            trackColor = Color.White
         )
 
         Spacer(modifier = Modifier.height(40.dp))
 
-        // Stack de cartas (baraja)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
         ) {
-            // Mostrar las próximas 3 cartas apiladas (efecto baraja)
-            // Dibujar primero las cartas de atrás, luego la frontal encima
             for (stackIndex in 2 downTo 0) {
                 val cardIndex = currentIndex + stackIndex
                 if (cardIndex < flashcards.size) {
@@ -206,48 +190,36 @@ fun StudySessionScreen(
                             .fillMaxWidth()
                             .fillMaxHeight()
                             .graphicsLayer {
-                                // Posicionamiento escalonado para efecto baraja
                                 translationY = stackIndex * 12f
                                 translationX = if (isFrontCard) offsetX.value else 0f
                                 scaleX = 1f - (stackIndex * 0.05f) - (if (isFrontCard) abs(offsetX.value) / 1200f * 0.1f else 0f)
                                 scaleY = 1f - (stackIndex * 0.05f) - (if (isFrontCard) abs(offsetX.value) / 1200f * 0.1f else 0f)
                                 rotationZ = if (isFrontCard) (offsetX.value / 1200f) * 15f else 0f
                                 alpha = if (isFrontCard) (1f - (abs(offsetX.value) / 1200f) * 0.3f) else (1f - stackIndex * 0.1f)
-                                // Flip animation solo para la tarjeta frontal
                                 if (isFrontCard) {
                                     rotationY = flipRotation
                                     cameraDistance = 12f * density
                                 }
                             }
                             .clickable(enabled = isFrontCard) { if (isFrontCard) isFlipped = !isFlipped }
-                            .pointerInput(Unit) {
+                            .pointerInput(isFlipped) {
                                 if (isFrontCard) {
                                     detectHorizontalDragGestures(
-                                        onDragStart = {},
                                         onDragEnd = {
                                             if (abs(offsetX.value) > 100) {
                                                 scope.launch {
-                                                    if (offsetX.value > 0) {
-                                                        goToPreviousWithAnimation()
-                                                    } else {
-                                                        goToNextWithAnimation()
-                                                    }
+                                                    val direction = if (isFlipped) -offsetX.value else offsetX.value
+                                                    if (direction > 0) goToPreviousWithAnimation() else goToNextWithAnimation()
                                                 }
                                             } else {
-                                                scope.launch {
-                                                    offsetX.animateTo(0f, animationSpec = tween(durationMillis = 200))
-                                                }
-                                            }
-                                        },
-                                        onDragCancel = {
-                                            scope.launch {
-                                                offsetX.animateTo(0f, animationSpec = tween(durationMillis = 200))
+                                                scope.launch { offsetX.animateTo(0f, animationSpec = tween(durationMillis = 200)) }
                                             }
                                         }
                                     ) { change, dragAmount ->
                                         change.consume()
-                                        scope.launch {
-                                            offsetX.snapTo(offsetX.value + dragAmount)
+                                        scope.launch { 
+                                            val adjustedDrag = if (isFlipped) -dragAmount else dragAmount
+                                            offsetX.snapTo(offsetX.value + adjustedDrag) 
                                         }
                                     }
                                 }
@@ -256,78 +228,34 @@ fun StudySessionScreen(
                         colors = CardDefaults.cardColors(
                             containerColor = cardBackgroundColors[cardIndex % cardBackgroundColors.size]
                         ),
-                        elevation = CardDefaults.cardElevation(defaultElevation = if (isFrontCard) 4.dp else 2.dp)
+                        elevation = CardDefaults.cardElevation(defaultElevation = if (isFrontCard) 4.dp else 1.dp)
                     ) {
                         if (isFrontCard) {
                             Box(
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .graphicsLayer {
-                                        if (flipRotation > 90f) {
-                                            rotationY = 180f
-                                        }
-                                    }
+                                    .graphicsLayer { if (flipRotation > 90f) rotationY = 180f }
                                     .padding(Spacing.xxl),
                                 contentAlignment = Alignment.Center
                             ) {
-                                if (flipRotation <= 90f) {
-                                    if (bionicReadingEnabled) {
-                                        BionicText(
-                                            text = card.question,
-                                            fontSize = calculateFontSizeForQuestion(card.question),
-                                            color = TextDark,
-                                            modifier = Modifier.fillMaxWidth()
-                                        )
-                                    } else {
-                                        Text(
-                                            text = card.question,
-                                            fontSize = calculateFontSizeForQuestion(card.question),
-                                            color = TextDark,
-                                            textAlign = TextAlign.Center,
-                                            lineHeight = 32.sp
-                                        )
-                                    }
-                                } else {
-                                    if (bionicReadingEnabled) {
-                                        BionicText(
-                                            text = card.answer,
-                                            fontSize = calculateFontSizeForAnswer(card.answer),
-                                            color = TextDark,
-                                            modifier = Modifier.fillMaxWidth(),
-                                            textAlign = if (card.answer.split(" ").size < 3) TextAlign.Center else TextAlign.Center
-                                        )
-                                    } else {
-                                        Text(
-                                            text = card.answer,
-                                            fontSize = calculateFontSizeForAnswer(card.answer),
-                                            color = TextDark,
-                                            textAlign = if (card.answer.split(" ").size < 3) TextAlign.Center else TextAlign.Center,
-                                            lineHeight = 32.sp
-                                        )
-                                    }
-                                }
-                            }
-                        } else {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(Spacing.xxl),
-                                contentAlignment = Alignment.Center
-                            ) {
+                                val textToShow = if (flipRotation <= 90f) card.question else card.answer
+                                val fontSize = if (flipRotation <= 90f) calculateFontSizeForQuestion(textToShow) else calculateFontSizeForAnswer(textToShow)
+                                
                                 if (bionicReadingEnabled) {
                                     BionicText(
-                                        text = card.question,
-                                        fontSize = (calculateFontSizeForQuestion(card.question).value * 0.75).sp,
-                                        color = TextDark.copy(alpha = 0.7f),
-                                        modifier = Modifier.fillMaxWidth()
+                                        text = textToShow,
+                                        fontSize = fontSize,
+                                        color = TextDark,
+                                        modifier = Modifier.fillMaxWidth(),
+                                        textAlign = TextAlign.Center
                                     )
                                 } else {
                                     Text(
-                                        text = card.question,
-                                        fontSize = (calculateFontSizeForQuestion(card.question).value * 0.75).sp,
-                                        color = TextDark.copy(alpha = 0.7f),
+                                        text = textToShow,
+                                        fontSize = fontSize,
+                                        color = TextDark,
                                         textAlign = TextAlign.Center,
-                                        lineHeight = 28.sp
+                                        lineHeight = 32.sp
                                     )
                                 }
                             }
@@ -339,28 +267,22 @@ fun StudySessionScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
         Text(
-            if (isFlipped) "Tap to see question" else "Tap to see answer",
-            modifier = Modifier.fillMaxWidth(),
-            textAlign = TextAlign.Center,
-            color = TextGray
-        )
-        Text(
-            "Swipe left for next • Swipe right for previous",
+            if (isFlipped) stringResource(R.string.tap_to_see_question) else stringResource(R.string.tap_to_see_answer),
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center,
             color = TextGray,
-            fontSize = 12.sp
+            fontSize = 14.sp
         )
-        Spacer(modifier = Modifier.height(40.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
-        if (hasFlashcards && displayTotal > 1) {
+        if (hasFlashcards && displayTotal > 0) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 DesignSystemButton(
                     onClick = { goToPreviousWithAnimation() },
-                    text = "Previous",
+                    text = stringResource(R.string.previous),
                     size = ButtonSize.Medium,
                     enabled = currentIndex > 0,
                     modifier = Modifier.weight(1f)
@@ -368,7 +290,7 @@ fun StudySessionScreen(
 
                 DesignSystemButton(
                     onClick = { goToNextWithAnimation() },
-                    text = "Next",
+                    text = stringResource(R.string.next),
                     size = ButtonSize.Medium,
                     enabled = currentIndex < displayTotal - 1,
                     modifier = Modifier.weight(1f)
@@ -383,32 +305,24 @@ fun StudySessionScreen(
             ) {
                 Button(
                     onClick = { shuffleCards() },
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(52.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFFF6B9D)  // Rosa vibrante
-                    ),
-                    shape = RoundedCornerShape(BorderRadius.lg)
+                    modifier = Modifier.weight(1f).height(52.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = LemonChiffon),
+                    shape = RoundedCornerShape(BorderRadius.md)
                 ) {
-                    Icon(Icons.Default.Casino, contentDescription = "Shuffle", tint = Color.White)
+                    Icon(Icons.Default.Casino, contentDescription = stringResource(R.string.shuffle), tint = TextDark)
                     Spacer(modifier = Modifier.width(Spacing.sm))
-                    Text("Shuffle", fontWeight = FontWeight.Bold, color = Color.White)
+                    Text(stringResource(R.string.shuffle), fontWeight = FontWeight.Bold, color = TextDark)
                 }
 
                 Button(
                     onClick = { resetToOriginal() },
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(52.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFFFA500)  // Naranja vibrante
-                    ),
-                    shape = RoundedCornerShape(BorderRadius.lg)
+                    modifier = Modifier.weight(1f).height(52.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MistyRose),
+                    shape = RoundedCornerShape(BorderRadius.md)
                 ) {
-                    Icon(Icons.Default.Refresh, contentDescription = "Reset", tint = Color.White)
+                    Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.reset), tint = TextDark)
                     Spacer(modifier = Modifier.width(Spacing.sm))
-                    Text("Reset", fontWeight = FontWeight.Bold, color = Color.White)
+                    Text(stringResource(R.string.reset), fontWeight = FontWeight.Bold, color = TextDark)
                 }
             }
         }
@@ -417,80 +331,45 @@ fun StudySessionScreen(
     if (showEditDialog) {
         AlertDialog(
             onDismissRequest = { showEditDialog = false },
-            title = { Text("Edit Deck Name") },
+            title = { Text(stringResource(R.string.edit_deck_name)) },
             text = {
                 OutlinedTextField(
                     value = editedDeckName,
                     onValueChange = { editedDeckName = it },
-                    label = { Text("Deck Name") },
+                    label = { Text(stringResource(R.string.deck_name)) },
                     shape = RoundedCornerShape(BorderRadius.md),
                     modifier = Modifier.fillMaxWidth()
                 )
             },
             confirmButton = {
-                Button(
+                TextButton(
                     onClick = {
                         if (editedDeckName.isNotBlank() && deck != null) {
-                            val updatedDeck = deck.copy(name = editedDeckName)
-                            onDeckUpdate(updatedDeck)
+                            onDeckUpdate(deck.copy(name = editedDeckName))
                             showEditDialog = false
                         }
                     }
-                ) {
-                    Text("Save")
-                }
+                ) { Text(stringResource(R.string.save), color = PowderBlue, fontWeight = FontWeight.Bold) }
             },
             dismissButton = {
-                Button(onClick = { showEditDialog = false }) {
-                    Text("Cancel")
-                }
+                TextButton(onClick = { showEditDialog = false }) { Text(stringResource(R.string.cancel), color = TextGray) }
             }
         )
     }
 }
 
-// Función auxiliar para calcular tamaño dinámico de fuente
-fun calculateFontSizeForQuestion(text: String): TextUnit {
-    return when {
-        text.length > 200 -> 16.sp   // Texto muy largo
-        text.length > 150 -> 18.sp   // Texto largo
-        text.length > 100 -> 22.sp   // Texto medio-largo
-        text.length > 60 -> 26.sp    // Texto medio
-        else -> 28.sp                 // Texto corto
-    }
+fun calculateFontSizeForQuestion(text: String): TextUnit = when {
+    text.length > 200 -> 16.sp
+    text.length > 150 -> 18.sp
+    text.length > 100 -> 22.sp
+    text.length > 60 -> 26.sp
+    else -> 28.sp
 }
 
-// Función auxiliar para calcular tamaño dinámico de fuente para respuestas
-fun calculateFontSizeForAnswer(text: String): TextUnit {
-    return when {
-        text.length > 200 -> 14.sp   // Texto muy largo
-        text.length > 150 -> 16.sp   // Texto largo
-        text.length > 100 -> 18.sp   // Texto medio-largo
-        text.length > 60 -> 20.sp    // Texto medio
-        else -> 22.sp                 // Texto corto
-    }
+fun calculateFontSizeForAnswer(text: String): TextUnit = when {
+    text.length > 200 -> 14.sp
+    text.length > 150 -> 16.sp
+    text.length > 100 -> 18.sp
+    text.length > 60 -> 20.sp
+    else -> 22.sp
 }
-
-@Preview(name = "Mobile", widthDp = 360, heightDp = 800, showBackground = true)
-@Composable
-fun StudySessionPreviewMobile() {
-    FlashCardsTheme {
-        StudySessionScreen(
-            onClose = {},
-            deck = Deck(name = "Biology Exam", cardCount = 50, progress = 20, icon = "🧬"),
-            totalCards = 50
-        )
-    }
-}
-
-@Preview(name = "Tablet", widthDp = 600, heightDp = 800, showBackground = true)
-@Composable
-fun StudySessionPreviewTablet() {
-    FlashCardsTheme {
-        StudySessionScreen(
-            onClose = {},
-            totalCards = 75
-        )
-    }
-}
-
