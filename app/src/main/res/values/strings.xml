@@ -48,4 +48,26 @@
     <string name="cards_count_label">%1$d tarjetas</string>
     <string name="questions_count_label">%1$d Preguntas</string>
     <string name="score_label">Puntuación</string>
+    <string name="subjects">Temas / Asignaturas</string>
+    <string name="add_subject">Añadir Tema</string>
+    <string name="new_subject">Nuevo Tema</string>
+    <string name="subject_name">Nombre del Tema</string>
+    <string name="delete_subject">¿Eliminar tema?</string>
+    <string name="delete_subject_confirm">¿Estás seguro de que quieres eliminar \"%1$s\"? Los mazos y tests no se borrarán, pero ya no estarán agrupados.</string>
+    <string name="no_content_subject">No hay mazos ni tests en este tema.</string>
+    <string name="continue_session">Continuar sesión</string>
+
+    <!-- Estadísticas -->
+    <string name="stats_title">Estadísticas</string>
+    <string name="stats_cards">TARJETAS</string>
+    <string name="stats_time">TIEMPO</string>
+    <string name="stats_vs_yesterday">%1$s vs ayer</string>
+    <string name="stats_total_study">Total de estudio</string>
+    <string name="stats_weekly_activity">Actividad Semanal</string>
+    <string name="stats_deck_performance">Rendimiento por Mazo</string>
+    <string name="stats_cards_mastered">%1$d tarjetas dominadas</string>
+    <string name="nav_home">INICIO</string>
+    <string name="nav_decks">MAZOS</string>
+    <string name="nav_progress">PROGRESO</string>
+    <string name="nav_profile">PERFIL</string>
 </resources>

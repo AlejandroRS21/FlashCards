@@ -45,7 +45,15 @@
     <string name="daily_goal">Daily Goal</string>
     <string name="keep_going">Keep going! You\'re doing great.</string>
     <string name="start_daily_review">Start Daily Review</string>
-    <string name="cards_mastered">%1$d cards • %2$d%% mastered</string>
+    <string name="cards_count_label">%1$d cards</string>
     <string name="questions_count_label">%1$d Questions</string>
     <string name="score_label">Score</string>
+    <string name="subjects">Subjects</string>
+    <string name="add_subject">Add Subject</string>
+    <string name="new_subject">New Subject</string>
+    <string name="subject_name">Subject Name</string>
+    <string name="delete_subject">Delete subject?</string>
+    <string name="delete_subject_confirm">Are you sure you want to delete \"%1$s\"? Decks and tests won\'t be deleted, but they will no longer be grouped.</string>
+    <string name="no_content_subject">No decks or tests in this subject.</string>
+    <string name="continue_session">Continue session</string>
 </resources>

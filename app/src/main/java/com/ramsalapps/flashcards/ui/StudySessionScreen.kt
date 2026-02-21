@@ -23,12 +23,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.TextUnit
-import com.ramsalapps.flashcards.DataManager
-import com.ramsalapps.flashcards.Deck
+import com.ramsalapps.flashcards.*
 import com.ramsalapps.flashcards.R
 import com.ramsalapps.flashcards.ui.theme.*
 import com.ramsalapps.flashcards.ui.theme.Spacing
@@ -38,13 +36,30 @@ import com.ramsalapps.flashcards.designsystem.components.ButtonSize
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
+fun calculateFontSizeForQuestion(text: String): TextUnit = when {
+    text.length > 200 -> 16.sp
+    text.length > 150 -> 18.sp
+    text.length > 100 -> 22.sp
+    text.length > 60 -> 26.sp
+    else -> 28.sp
+}
+
+fun calculateFontSizeForAnswer(text: String): TextUnit = when {
+    text.length > 200 -> 14.sp
+    text.length > 150 -> 16.sp
+    text.length > 100 -> 18.sp
+    text.length > 60 -> 20.sp
+    else -> 22.sp
+}
+
 @Composable
 fun StudySessionScreen(
     onClose: () -> Unit,
     deck: Deck? = null,
     totalCards: Int = 1,
     onDeckUpdate: (Deck) -> Unit = {},
-    onCardMastered: (String) -> Unit = {}
+    onCardMastered: (String) -> Unit = {},
+    onSaveSessionState: (DeckSessionState) -> Unit = {}
 ) {
     val context = LocalContext.current
     val dataManager = DataManager(context)
@@ -52,11 +67,22 @@ fun StudySessionScreen(
     val originalFlashcards = deck?.flashcards ?: emptyList()
     val hasFlashcards = originalFlashcards.isNotEmpty()
 
-    var currentIndex by remember { mutableStateOf(0) }
-    var isFlipped by remember { mutableStateOf(false) }
+    val savedState = deck?.sessionState
+    
+    var flashcards by remember { 
+        mutableStateOf(
+            if (savedState != null && savedState.cardIdsOrder.isNotEmpty()) {
+                val idMap = originalFlashcards.associateBy { it.id }
+                savedState.cardIdsOrder.mapNotNull { idMap[it] }
+            } else originalFlashcards
+        )
+    }
+    
+    var currentIndex by remember { mutableStateOf(savedState?.lastCardIndex ?: 0) }
+    var isFlipped by remember { mutableStateOf(savedState?.isFlipped ?: false) }
+    
     var showEditDialog by remember { mutableStateOf(false) }
     var editedDeckName by remember { mutableStateOf(deck?.name ?: "") }
-    var flashcards by remember { mutableStateOf(originalFlashcards) }
     var bionicReadingEnabled by remember { mutableStateOf(dataManager.isBionicReadingEnabled()) }
 
     val currentCard = if (hasFlashcards && currentIndex < flashcards.size) flashcards[currentIndex] else null
@@ -74,25 +100,36 @@ fun StudySessionScreen(
         PeachPuff, MistyRose, LemonChiffon, Color(0xFFE0F7FA), PastelPurple, PastelGreen
     )
 
+    fun saveProgress() {
+        val state = DeckSessionState(
+            lastCardIndex = currentIndex,
+            cardIdsOrder = flashcards.map { it.id },
+            isFlipped = isFlipped
+        )
+        onSaveSessionState(state)
+    }
+
     fun shuffleCards() {
         flashcards = flashcards.shuffled()
         currentIndex = 0
         isFlipped = false
+        saveProgress()
     }
 
     fun resetToOriginal() {
         flashcards = originalFlashcards
         currentIndex = 0
         isFlipped = false
+        onSaveSessionState(DeckSessionState())
     }
 
     suspend fun animateSwipeNext() {
-        offsetX.animateTo(-1200f, animationSpec = tween(durationMillis = 400))
+        offsetX.animateTo(1200f, animationSpec = tween(durationMillis = 400))
         offsetX.snapTo(0f)
     }
 
     suspend fun animateSwipePrevious() {
-        offsetX.animateTo(1200f, animationSpec = tween(durationMillis = 400))
+        offsetX.animateTo(-1200f, animationSpec = tween(durationMillis = 400))
         offsetX.snapTo(0f)
     }
 
@@ -102,6 +139,7 @@ fun StudySessionScreen(
                 animateSwipeNext()
                 currentIndex++
                 isFlipped = false
+                saveProgress()
             }
         }
     }
@@ -112,6 +150,7 @@ fun StudySessionScreen(
                 animateSwipePrevious()
                 currentIndex--
                 isFlipped = false
+                saveProgress()
             }
         }
     }
@@ -192,24 +231,27 @@ fun StudySessionScreen(
                             .graphicsLayer {
                                 translationY = stackIndex * 12f
                                 translationX = if (isFrontCard) offsetX.value else 0f
+
                                 scaleX = 1f - (stackIndex * 0.05f) - (if (isFrontCard) abs(offsetX.value) / 1200f * 0.1f else 0f)
                                 scaleY = 1f - (stackIndex * 0.05f) - (if (isFrontCard) abs(offsetX.value) / 1200f * 0.1f else 0f)
                                 rotationZ = if (isFrontCard) (offsetX.value / 1200f) * 15f else 0f
                                 alpha = if (isFrontCard) (1f - (abs(offsetX.value) / 1200f) * 0.3f) else (1f - stackIndex * 0.1f)
+                                // rotationY removed from here to prevent gesture coordinate inversion
+                            }
+                            .clickable(enabled = isFrontCard) { 
                                 if (isFrontCard) {
-                                    rotationY = flipRotation
-                                    cameraDistance = 12f * density
+                                    isFlipped = !isFlipped
+                                    saveProgress()
                                 }
                             }
-                            .clickable(enabled = isFrontCard) { if (isFrontCard) isFlipped = !isFlipped }
-                            .pointerInput(isFlipped) {
+                            .pointerInput(Unit) {
                                 if (isFrontCard) {
                                     detectHorizontalDragGestures(
                                         onDragEnd = {
                                             if (abs(offsetX.value) > 100) {
                                                 scope.launch {
-                                                    val direction = if (isFlipped) -offsetX.value else offsetX.value
-                                                    if (direction > 0) goToPreviousWithAnimation() else goToNextWithAnimation()
+                                                    // Swipe right (positive) = next, Swipe left (negative) = previous
+                                                    if (offsetX.value > 0) goToNextWithAnimation() else goToPreviousWithAnimation()
                                                 }
                                             } else {
                                                 scope.launch { offsetX.animateTo(0f, animationSpec = tween(durationMillis = 200)) }
@@ -218,8 +260,7 @@ fun StudySessionScreen(
                                     ) { change, dragAmount ->
                                         change.consume()
                                         scope.launch { 
-                                            val adjustedDrag = if (isFlipped) -dragAmount else dragAmount
-                                            offsetX.snapTo(offsetX.value + adjustedDrag) 
+                                            offsetX.snapTo(offsetX.value + dragAmount)
                                         }
                                     }
                                 }
@@ -234,29 +275,46 @@ fun StudySessionScreen(
                             Box(
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .graphicsLayer { if (flipRotation > 90f) rotationY = 180f }
+                                    .graphicsLayer {
+                                        // Apply flip rotation here (visual only)
+                                        rotationY = flipRotation
+                                        cameraDistance = 12f * density
+                                    }
                                     .padding(Spacing.xxl),
                                 contentAlignment = Alignment.Center
                             ) {
-                                val textToShow = if (flipRotation <= 90f) card.question else card.answer
-                                val fontSize = if (flipRotation <= 90f) calculateFontSizeForQuestion(textToShow) else calculateFontSizeForAnswer(textToShow)
-                                
-                                if (bionicReadingEnabled) {
-                                    BionicText(
-                                        text = textToShow,
-                                        fontSize = fontSize,
-                                        color = TextDark,
-                                        modifier = Modifier.fillMaxWidth(),
-                                        textAlign = TextAlign.Center
-                                    )
-                                } else {
-                                    Text(
-                                        text = textToShow,
-                                        fontSize = fontSize,
-                                        color = TextDark,
-                                        textAlign = TextAlign.Center,
-                                        lineHeight = 32.sp
-                                    )
+                                // Since we are rotating the content Box, when it passes 90 degrees it's mirrored.
+                                // We need to un-mirror the text content if it's the "back" side visual.
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .graphicsLayer {
+                                            if (flipRotation > 90f) {
+                                                rotationY = 180f
+                                            }
+                                        },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    val textToShow = if (flipRotation <= 90f) card.question else card.answer
+                                    val fontSize = if (flipRotation <= 90f) calculateFontSizeForQuestion(textToShow) else calculateFontSizeForAnswer(textToShow)
+
+                                    if (bionicReadingEnabled) {
+                                        BionicText(
+                                            text = textToShow,
+                                            fontSize = fontSize,
+                                            color = TextDark,
+                                            modifier = Modifier.fillMaxWidth(),
+                                            textAlign = TextAlign.Center
+                                        )
+                                    } else {
+                                        Text(
+                                            text = textToShow,
+                                            fontSize = fontSize,
+                                            color = TextDark,
+                                            textAlign = TextAlign.Center,
+                                            lineHeight = 32.sp
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -303,6 +361,7 @@ fun StudySessionScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                @Suppress("DEPRECATION")
                 Button(
                     onClick = { shuffleCards() },
                     modifier = Modifier.weight(1f).height(52.dp),
@@ -314,6 +373,7 @@ fun StudySessionScreen(
                     Text(stringResource(R.string.shuffle), fontWeight = FontWeight.Bold, color = TextDark)
                 }
 
+                @Suppress("DEPRECATION")
                 Button(
                     onClick = { resetToOriginal() },
                     modifier = Modifier.weight(1f).height(52.dp),
@@ -356,20 +416,4 @@ fun StudySessionScreen(
             }
         )
     }
-}
-
-fun calculateFontSizeForQuestion(text: String): TextUnit = when {
-    text.length > 200 -> 16.sp
-    text.length > 150 -> 18.sp
-    text.length > 100 -> 22.sp
-    text.length > 60 -> 26.sp
-    else -> 28.sp
-}
-
-fun calculateFontSizeForAnswer(text: String): TextUnit = when {
-    text.length > 200 -> 14.sp
-    text.length > 150 -> 16.sp
-    text.length > 100 -> 18.sp
-    text.length > 60 -> 20.sp
-    else -> 22.sp
 }

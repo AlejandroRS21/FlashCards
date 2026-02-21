@@ -19,7 +19,6 @@ import com.ramsalapps.flashcards.DataManager
 import com.ramsalapps.flashcards.ui.theme.*
 import com.ramsalapps.flashcards.ui.theme.Spacing
 import com.ramsalapps.flashcards.ui.theme.BorderRadius
-import com.ramsalapps.flashcards.designsystem.components.DesignSystemCard
 import com.ramsalapps.flashcards.ui.components.AppNavigationBar
 import androidx.compose.ui.tooling.preview.Preview
 import com.ramsalapps.flashcards.ui.theme.FlashCardsTheme
@@ -28,7 +27,8 @@ import com.ramsalapps.flashcards.ui.theme.FlashCardsTheme
 fun SettingsScreen(
     onBack: () -> Unit,
     onImportClick: () -> Unit = {},
-    onHomeClick: () -> Unit = {}
+    onHomeClick: () -> Unit = {},
+    onStatsClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val dataManager = DataManager(context)
@@ -48,6 +48,7 @@ fun SettingsScreen(
                 currentScreen = "settings",
                 onHomeClick = onHomeClick,
                 onImportClick = onImportClick,
+                onStatsClick = onStatsClick,
                 onSettingsClick = {} // Already here
             )
         }

@@ -1,33 +1,23 @@
 package com.ramsalapps.flashcards.ui.components
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BarChart
-import androidx.compose.material.icons.filled.CloudUpload
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.layout.height
+import com.ramsalapps.flashcards.R
 import com.ramsalapps.flashcards.ui.theme.AccentBlue
 import com.ramsalapps.flashcards.ui.theme.TextGray
 import androidx.compose.ui.tooling.preview.Preview
 import com.ramsalapps.flashcards.ui.theme.FlashCardsTheme
 
-/**
- * Componente reutilizable de barra de navegación inferior
- * 
- * @param currentScreen Pantalla actualmente seleccionada ("home", "import", "stats", "settings")
- * @param onHomeClick Callback cuando se toca el botón Home
- * @param onImportClick Callback cuando se toca el botón Import
- * @param onStatsClick Callback cuando se toca el botón Stats
- * @param onSettingsClick Callback cuando se toca el botón Settings
- */
 @Composable
 fun AppNavigationBar(
     currentScreen: String = "home",
@@ -37,70 +27,87 @@ fun AppNavigationBar(
     onSettingsClick: () -> Unit = {}
 ) {
     NavigationBar(
-        containerColor = Color.White
+        containerColor = Color.White,
+        tonalElevation = 0.dp
     ) {
         // Home
         NavigationBarItem(
             icon = {
                 Icon(
-                    Icons.Default.Home,
-                    contentDescription = "Home",
-                    tint = if (currentScreen == "home") AccentBlue else TextGray
+                    painter = painterResource(id = R.drawable.ic_nav_home),
+                    contentDescription = null
                 )
             },
-            label = { Text("Home") },
+            label = { Text(stringResource(R.string.nav_home)) },
             selected = currentScreen == "home",
-            onClick = onHomeClick
+            onClick = onHomeClick,
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = AccentBlue,
+                unselectedIconColor = TextGray,
+                selectedTextColor = AccentBlue,
+                unselectedTextColor = TextGray,
+                indicatorColor = Color.Transparent
+            )
         )
         
-        // Import
+        // Mazos (Import functionality usually or list)
         NavigationBarItem(
             icon = {
                 Icon(
-                    Icons.Default.CloudUpload,
-                    contentDescription = "Import",
-                    tint = if (currentScreen == "import") AccentBlue else TextGray
+                    painter = painterResource(id = R.drawable.ic_nav_decks),
+                    contentDescription = null
                 )
             },
-            label = { Text("Import") },
+            label = { Text(stringResource(R.string.nav_decks)) },
             selected = currentScreen == "import",
-            onClick = onImportClick
+            onClick = onImportClick,
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = AccentBlue,
+                unselectedIconColor = TextGray,
+                selectedTextColor = AccentBlue,
+                unselectedTextColor = TextGray,
+                indicatorColor = Color.Transparent
+            )
         )
         
-        // Stats
+        // Progreso (Stats)
         NavigationBarItem(
             icon = {
                 Icon(
-                    Icons.Default.BarChart,
-                    contentDescription = "Stats",
-                    tint = if (currentScreen == "stats") AccentBlue else TextGray
+                    painter = painterResource(id = R.drawable.ic_nav_stats),
+                    contentDescription = null
                 )
             },
-            label = { Text("Stats") },
+            label = { Text(stringResource(R.string.nav_progress)) },
             selected = currentScreen == "stats",
-            onClick = onStatsClick
+            onClick = onStatsClick,
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = AccentBlue,
+                unselectedIconColor = TextGray,
+                selectedTextColor = AccentBlue,
+                unselectedTextColor = TextGray,
+                indicatorColor = Color.Transparent
+            )
         )
         
-        // Settings
+        // Perfil (Settings)
         NavigationBarItem(
             icon = {
                 Icon(
-                    Icons.Default.Settings,
-                    contentDescription = "Settings",
-                    tint = if (currentScreen == "settings") AccentBlue else TextGray
+                    Icons.Default.Person,
+                    contentDescription = null
                 )
             },
-            label = { Text("Settings") },
+            label = { Text(stringResource(R.string.nav_profile)) },
             selected = currentScreen == "settings",
-            onClick = onSettingsClick
+            onClick = onSettingsClick,
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = AccentBlue,
+                unselectedIconColor = TextGray,
+                selectedTextColor = AccentBlue,
+                unselectedTextColor = TextGray,
+                indicatorColor = Color.Transparent
+            )
         )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun AppNavigationBarPreview() {
-    FlashCardsTheme {
-        AppNavigationBar(currentScreen = "home")
     }
 }
